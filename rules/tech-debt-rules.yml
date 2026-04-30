@@ -1,0 +1,735 @@
+# 技术债管理规则 (Technical Debt Management Rules)
+
+> **版本**: 2.0.0  
+> **来源**: Harness Engineering 熵治理支柱 + SonarQube 技术债模型  
+> **集成**: garbage-collector Agent + quality-gate Skill
+
+---
+
+## 一、技术债分类体系
+
+### 1.1 债务类型定义
+
+```yaml
+debt_categories:
+  
+  # 🔴 代码质量债 (Code Quality Debt)
+  code_quality:
+    subtypes:
+      - name: todo_fixme
+        label: "TODO/FIXME注释"
+        description: "代码中的待办事项标记"
+        base_interest_rate: 0.05  # 日利息5%
+        
+      - name: magic_numbers
+        label: "魔法数字"
+        description: "硬编码的数字字面量"
+        base_interest_rate: 0.03
+        
+      - name: dead_code
+        label: "死代码"
+        description: "未使用的代码、被注释的代码块"
+        base_interest_rate: 0.07
+        
+      - name: code_duplication
+        label: "代码重复"
+        description: "相似度超过阈值的重复代码块"
+        base_interest_rate: 0.08
+        
+      - name: long_function
+        label: "过长函数"
+        description: "超过行数限制的函数/方法"
+        base_interest_rate: 0.04
+        
+  # 🟡 架构设计债 (Architecture Debt)
+  architecture:
+    subtypes:
+      - name: circular_dependency
+        label: "循环依赖"
+        description: "模块之间的循环引用"
+        base_interest_rate: 0.10  # 高利息！
+        
+      - name: layer_violation
+        label: "分层违规"
+        description: "违反依赖分层规则"
+        base_interest_rate: 0.09
+        
+      - name: god_class
+        label: "上帝类/上帝对象"
+        description: "承担过多职责的类"
+        base_interest_rate: 0.06
+        
+      - name: tight_coupling
+        label: "紧耦合"
+        description: "模块间耦合度过高"
+        base_interest_rate: 0.07
+        
+  # 🟠 测试债 (Testing Debt)
+  testing:
+    subtypes:
+      - name: missing_tests
+        label: "缺失测试"
+        description: "没有对应测试的代码"
+        base_interest_rate: 0.12  # 最高利息！
+        
+      - name: fragile_tests
+        label: "脆弱测试"
+        description: "容易失败的测试用例"
+        base_interest_rate: 0.05
+        
+      - name: coverage_gap
+        label: "覆盖率不足"
+        description: "未达到覆盖率目标"
+        base_interest_rate: 0.06
+        
+  # 🔵 文档债 (Documentation Debt)
+  documentation:
+    subtypes:
+      - name: outdated_docs
+        label: "过时文档"
+        description: "与代码不一致的文档"
+        base_interest_rate: 0.04
+        
+      - name: missing_docs
+        label: "缺失文档"
+        description: "缺少必要的API文档或注释"
+        base_interest_rate: 0.03
+```
+
+### 1.2 严重程度分级
+
+```yaml
+severity_levels:
+  
+  critical:    # 致命级 - 必须立即处理
+    score_range: [90, 100]
+    color: "#DC2626"
+    icon: "💀"
+    auto_action: "block_deployment"  # 阻断部署
+    sla_hours: 24                    # 24小时内必须处理
+    
+  high:        # 高优先级 - 本周必须处理
+    score_range: [70, 89]
+    color: "#EA580C"
+    icon: "🔴"
+    auto_action: "create_task"       # 自动创建修复Task
+    sla_days: 7
+    
+  medium:      # 中优先级 - 本迭代处理
+    score_range: [40, 69]
+    color: "#D97706"
+    icon: "⚠️"
+    auto_action: "log_only"          # 仅记录
+    sprint_target: true              # 目标在本Sprint清理
+    
+  low:         # 低优先级 - 有空再处理
+    score_range: [0, 39]
+    color: "#65A30D"
+    icon: "💡"
+    auto_action: "suggest"           # 建议
+    backlog_item: true               # 加入Backlog
+```
+
+---
+
+## 二、量化评估模型
+
+### 2.1 技术债评分公式
+
+```
+总债务分值 = Σ(单项债务本金 × 时间因子 × 复杂度因子 × 影响因子)
+
+其中：
+- 单项债务本金: 基础分值（见下表）
+- 时间因子: 1 + (存在天数 / 365) × 年利率
+- 复杂度因子: 根据修改难度调整 (1.0-2.0)
+- 影响因子: 根据影响范围调整 (1.0-3.0)
+```
+
+### 2.2 各类型基础分值表
+
+| 债务类型 | 基础分值 | 说明 |
+|---------|---------|------|
+| TODO/FIXME | 10-30 | 根据内容判断严重性 |
+| 魔法数字 | 5-15 | 每处计分 |
+| 死代码 | 20-50 | 按代码块大小 |
+| 代码重复 | 15-40 | 按重复行数 |
+| 过长函数 | 10-25 | 超出限制的行数 |
+| 循环依赖 | **50-80** | 架构问题，高代价 |
+| 分层违规 | **40-70** | 违反架构约束 |
+| 缺失测试 | **30-60** | 质量风险 |
+| 过时文档 | 10-20 | 维护成本 |
+
+### 2.3 时间衰减算法
+
+```python
+# 伪代码 - 技术债时间价值计算
+def calculate_debt_with_interest(principal, days_old, annual_rate):
+    """
+    计算技术债的当前价值（含复利）
+    
+    参数:
+        principal: 本金（基础分值）
+        days_old: 存在天数
+        annual_rate: 年利率（如0.05表示5%）
+    
+    返回:
+        current_value: 当前债务总值
+    """
+    # 复利公式: A = P(1 + r)^t
+    time_factor = (1 + annual_rate) ** (days_old / 365)
+    current_value = principal * time_factor
+    
+    # 年龄惩罚（加速增长）
+    if days_old > 90:   # 超过3个月
+        current_value *= 1.5   # 1.5倍惩罚
+    if days_old > 180:  # 超过6个月
+        current_value *= 2.0   # 2倍惩罚
+    if days_old > 365:  # 超过1年
+        current_value *= 3.0   # 3倍惩罚（技术遗产！）
+    
+    return round(current_value, 2)
+
+
+# 示例计算
+# 一个FIXME标记，基础分值20，存在45天，年利率8%
+debt_value = calculate_debt_with_interest(20, 45, 0.08)
+# 结果: ≈ 22.19 （已经增值11%）
+```
+
+---
+
+## 三、检测规则详解
+
+### 3.1 TODO/FIXME 检测
+
+```yaml
+todo_detection:
+  patterns:
+    - regex: "(TODO|FIXME|HACK|XXX|BUG|OPTIMIZE)"
+      flags: ["case_insensitive", "multiline"]
+      
+  content_analysis:
+    # 通过内容判断严重程度
+    severity_keywords:
+      critical:
+        - "安全"
+        - "绕过"
+        - "临时方案"
+        - "hack"
+        - "紧急"
+        - "暂时"
+      high:
+        - "性能"
+        - "优化"
+        - "重构"
+        - "待完善"
+        - "需要改进"
+      medium:
+        - "考虑"
+        - "可能"
+        - "后续"
+        - "将来"
+      low:
+        - "样式"
+        - "格式"
+        - "注释"
+        
+  aging_policy:
+    fresh: "< 7天"       # 新鲜期，不催促
+    stale: "7-30天"     # 变质期，开始提醒
+    rotten: "> 30天"     # 腐烂期，强制升级
+    legacy: "> 90天"     # 遗产级，阻断发布
+```
+
+### 3.2 魔法数字检测
+
+```yaml
+magic_number_detection:
+  exclude_patterns:
+    - "^[01]$"           # 允许 0 和 1
+    - "^-1$"             # 允许 -1（常用于错误码）
+    - "^\d{1,2}$"       # 允许 1-99 的简单计数器
+    - "version.*\d+"     # 版本号
+    - "port.*\d+"        # 端口号
+    - "\/\*.*\*\/.*\d+" # 注释中的数字
+    
+  include_patterns:
+    - "timeout.*=\s*\d{3,}"          # 超时 > 100ms 应该是常量
+    - "interval.*=\s*\d{3,}"         # 间隔 > 100ms
+    - "max.*=\s*\d{2,}"              # 最大值 > 10
+    - "limit.*=\s*\d{2,}"            # 限制 > 10
+    - "retry.*=\s*\d{1,}"            # 重试次数
+    - "buffer.*size.*=\s*\d{3,}"     # 缓冲区大小
+    - "page.*size.*=\s*\d{2,}"       # 分页大小
+      
+  same_file_threshold: 3   # 同一文件出现3+处才报告
+  
+  suggested_constants:
+    pattern: "{MEANING}_const"
+    location: "config/constants.ts"
+```
+
+### 3.3 死代码检测
+
+```yaml
+dead_code_detection:
+  types:
+    
+    commented_out_code:
+      min_lines: 5                # 连续注释>5行
+      indicators:
+        - "// old"
+        - "// deprecated"
+        - "// removed"
+        - "// backup"
+        - "/* 注释掉的代码"
+        
+    unused_exports:
+      detection_method: "cross_reference"
+      check_imports: true         # 检查是否有其他文件导入
+      
+    unused_functions:
+      min_function_lines: 3       # 至少3行的函数
+      exclude_test_files: true    # 排除测试文件中的helper
+      
+    unreachable_code:
+      patterns:
+        - "return\s+.*\n\s+.*"    # return后的代码
+        - "throw\s+.*\n\s+.*"     # throw后的代码
+        - "break\s*\n\s+.*"       # break后的代码
+```
+
+### 3.4 代码重复检测
+
+```yaml
+duplication_detection:
+  method: "hash_based"            # 基于哈希的快速检测
+  
+  hash_algorithm:
+    type: "rolling_hash"          # 滚动哈希（Rabin-Karp）
+    window_size: 10               # 10行为一个窗口
+    normalization:
+      - remove_whitespace         # 移除空白字符
+      - normalize_indentation     # 统一缩进
+      - ignore_comments            # 忽略注释
+      - normalize_variable_names   # 规范化变量名（可选）
+      
+  similarity_threshold: 0.80      # 80%相似度即判定为重复
+  
+  min_duplicate_lines: 5          # 最少重复5行才报告
+  
+  reporting:
+    show_original: true           # 显示原始位置
+    show_duplicates: true         # 显示所有重复位置
+    suggest_extraction: true      # 建议提取为公共函数
+```
+
+---
+
+## 四、自动化修复建议
+
+### 4.1 修复建议模板库
+
+```yaml
+fix_suggestions:
+
+  magic_numbers:
+    template: |
+      ## 修复建议：提取魔法数字为命名常量
+      
+      **位置**: {file_path}:{line_number}
+      **当前代码**: `{code_snippet}`
+      **魔法数值**: {magic_value}
+      
+      ### 推荐方案：
+      
+      1️⃣ 在 `src/config/constants.ts` 中添加：
+      ```typescript
+      export const {CONSTANT_NAME} = {magic_value}; // {meaning}
+      ```
+      
+      2️⃣ 替换原代码中的硬编码值：
+      ```typescript
+      // Before
+      {original_line}
+      
+      // After
+      import {{CONSTANT_NAME}} from '@/config/constants';
+      {fixed_line}
+      ```
+      
+      **收益**: 
+      - ✅ 提高可读性和可维护性
+      - ✅ 便于统一修改
+      - ✅ 减少魔法数字数量: {current_count} → {after_fix_count}
+      
+  code_duplication:
+    template: |
+      ## 修复建议：提取重复代码为共享函数
+      
+      **重复位置**:
+      - {location_1}
+      - {location_2}
+      - ... (共{n}处)
+      
+      **重复行数**: {duplicate_lines} 行
+      **相似度**: {similarity}%
+      
+      ### 推荐方案：
+      
+      1️⃣ 创建共享工具函数 `src/utils/{function_name}.ts`:
+      ```typescript
+      export function {function_name}({params}) {
+        // 提取的通用逻辑
+        {common_logic}
+      }
+      ```
+      
+      2️⃣ 在各调用处替换为：
+      ```typescript
+      import {{function_name}} from '@/utils/{function_name}';
+      
+      // 使用共享函数
+      const result = {function_name}({args});
+      ```
+      
+      **收益**:
+      - ✅ 消除代码重复 (DRY原则)
+      - ✅ 减少维护成本（只需改一处）
+      - ✅ 代码量减少: ~{reduction_lines} 行
+      
+  todo_fixme:
+    template: |
+      ## 处理建议：解决 TODO/FIXME 标记
+      
+      **标记内容**: `{todo_content}`
+      **位置**: {file_path}:{line_number}
+      **存在天数**: {days_old} 天
+      **当前等级**: {severity_level}
+      
+      ### 分析：
+      
+      {ai_analysis_of_todo}
+      
+      ### 推荐行动：
+      
+      {recommended_action}
+      
+      ⏰ **注意**: 此标记已存在 {days_old} 天，如继续拖延将升级为 **{next_level}**
+```
+
+### 4.2 自动化修复能力矩阵
+
+| 們务类型 | 可全自动修复 | 需人工确认 | 无法自动修复 |
+|---------|:-----------:|:---------:|:----------:|
+| 魔法数字 | ✅ 提取常量 | - | - |
+| 简单重复 | ✅ 提取函数 | - | - |
+| 格式问题 | ✅ auto-fix | - | - |
+| 未使用变量 | ✅ 删除 | - | - |
+| TODO(简单) | - | ✅ 实现功能 | - |
+| TODO(复杂) | - | - | ❌ 需要设计决策 |
+| 架构违规 | - | - | ❌ 需要重构 |
+| 循环依赖 | - | - | ❌ 需要架构调整 |
+| 缺失测试 | ✅ 生成骨架 | ✅ 补充断言 | - |
+
+---
+
+## 五、优先级排序算法
+
+### 5.1 ROI驱动的优先级模型
+
+```python
+def calculate_priority_score(debt_item):
+    """
+    计算技术债修复的优先级分数
+    
+    公式: Priority = (Impact × Urgency) / Effort
+    
+    其中:
+    - Impact: 修复后带来的正面影响 (1-10)
+    - Urgency: 紧迫程度（基于年龄和增长率）(1-10)  
+    - Effort: 修复所需的工作量 (1-10，越高越难)
+    """
+    
+    impact = assess_impact(debt_item)
+    urgency = calculate_urgency(debt_item['days_old'], debt_item['growth_rate'])
+    effort = estimate_effort(debt_item['type'], debt_item['complexity'])
+    
+    priority = (impact * urgency) / effort
+    
+    return round(priority, 2)
+
+
+def assess_impact(debt_item):
+    """评估修复此债务的影响"""
+    
+    impact_factors = {
+        'security_related': 10,    # 安全相关 → 最高影响
+        'performance': 8,          # 性能相关
+        'maintainability': 6,      # 可维护性
+        'readability': 4,          # 可读性
+        'consistency': 3,          # 一致性
+    }
+    
+    base_impact = impact_factors.get(debt_item['category'], 5)
+    
+    # 影响范围加权
+    scope_multiplier = {
+        'single_file': 1.0,
+        'module': 1.5,
+        'cross_module': 2.0,
+        'architecture': 3.0,
+    }
+    
+    return base_impact * scope_multiplier.get(debt_item['scope'], 1.0)
+
+
+def calculate_urgency(days_old, growth_rate):
+    """计算紧迫程度"""
+    
+    base_urgency = min(10, days_old / 30)  # 每30天增加1点
+    
+    # 增长率加速
+    if growth_rate > 0.1:  # 月增长>10%
+        urgency *= 1.5
+    if growth_rate > 0.2:  # 月增长>20%
+        urgency *= 2.0
+        
+    return min(10, base_urgency)
+```
+
+### 5.2 优先级队列示例输出
+
+```markdown
+## 技术债修复优先级队列
+
+| 优先级 | 债务ID | 类型 | 当前分值 | ROI得分 | 建议 |
+|:-----:|--------|------|---------|--------|------|
+| 🥇 P1 | TD-042 | 循环依赖 | 85.5 | **9.2** | 立即修复 |
+| 🥈 P2 | TD-018 | FIXME(安全) | 72.3 | **8.5** | 本次Sprint必做 |
+| 🥉 P3 | TD-089 | 缺失测试 | 68.1 | **7.8** | 本周完成 |
+| 4 | TD-005 | 代码重复 | 45.2 | **6.1** | 有空就做 |
+| 5 | TD-123 | 魔法数字 | 23.8 | **4.3** | Backlog项 |
+
+**本次推荐修复**: TD-042, TD-018 (预计工作量: 2h)
+**预期收益**: 
+- 消除循环依赖 → 降低复杂度15%
+- 修复安全FIXME → 消除高风险漏洞
+- 技术债总分下降: 157.8 → 85.2 (-46%)
+```
+
+---
+
+## 六、集成配置
+
+### 6.1 quality-gate 集成
+
+```yaml
+# 在 quality-gate/SKILL.md 中添加
+tech_debt_check:
+  enabled: true
+  
+  thresholds:
+    blocking:
+      max_critical_debt: 0        # 不允许致命级技术债
+      max_total_score: 200       # 总分不超过200才允许合并
+      
+    warning:
+      max_high_debt: 5           # 高优先级不超过5个
+      max_new_debt_this_sprint: 10  # 本Sprint新增不超过10个
+      
+  actions_on_failure:
+    block_merge: true            # 阻止合并
+    create_jira: true            # 自动创建JIRA任务
+    notify_team: true            # 通知团队
+    suggest_refactor: true       # 建议重构方案
+```
+
+### 6.2 DEV-PLAN 集成
+
+```yaml
+# 在 dev-planner 生成的计划中自动加入
+tech_debt_sprint:
+  allocation_percentage: 20      # 每个Sprint分配20%时间处理技术债
+  max_items_per_sprint: 3        # 每次最多处理3个技术债项
+  include_in_retrospective: true # 回顾会议必须讨论
+  
+  selection_criteria:
+    - 最高ROI优先
+    - 与当前开发相关的优先
+    - 阻塞新功能开发的优先
+```
+
+---
+
+## 七、报告模板
+
+### 7.1 技术债仪表板
+
+```markdown
+# 📊 项目技术债仪表板
+
+**生成时间**: {timestamp}  
+**扫描范围**: {project_root} (共 {total_files} 个文件)  
+**对比上次**: {trend} ({change_percent}%)
+
+---
+
+## 总览指标
+
+| 指标 | 当前值 | 上次值 | 变化 | 目标 | 状态 |
+|------|-------|-------|------|------|------|
+| 📈 技术债总分 | {total_score} | {prev_score} | {delta} | <100 | {status} |
+| ⚠️ 致命级数量 | {critical_count} | {prev_critical} | {delta} | 0 | {status} |
+| 🔴 高优先级数 | {high_count} | {prev_high} | {delta} | <5 | {status} |
+| 📉 平均债务年龄 | {avg_age_days}天 | {prev_avg_age} | {delta} | <30天 | {status} |
+| 🔄 本月新增 | {new_this_month} | - | - | <10 | {status} |
+
+---
+
+## 📊 趋势图表数据
+
+```json
+{
+  "labels": ["第1周", "第2周", "第3周", "第4周"],
+  "datasets": [
+    {"label": "总债务分", "data": [150, 165, 148, 142]},
+    {"label": "已修复", "data": [0, 5, 22, 35]},
+    {"label": "新增", "data": [15, 20, 5, 8]}
+  ]
+}
+```
+
+---
+
+## 🔝 Top 10 技术债项
+
+| 排名 | ID | 类型 | 文件 | 分值 | 存在天数 | ROI | 状态 |
+|:---:|----|------|------|------|:-------:|:---:|------|
+| 1 | TD-{id} | {type} | {file}:{line} | {score} | {age}d | {roi} | {action} |
+| ... | ... | ... | ... | ... | ... | ... | ... |
+
+---
+
+## 🎯 修复建议
+
+### 立即处理（本周）
+{immediate_actions}
+
+### 本Sprint目标
+{sprint_targets}
+
+### Backlog候选
+{backlog_items}
+
+---
+
+## 📈 改善建议
+
+{improvement_recommendations}
+
+---
+
+*报告由 Garbage Collector Agent 自动生成*
+```
+
+---
+
+## 八、使用指南
+
+### 8.1 手动触发完整扫描
+
+```bash
+# 方式1: 通过命令触发
+/gc:deep
+
+# 方式2: Boss模式空闲时自动触发（每30分钟）
+
+# 方式3: Phase完成后自动触发
+```
+
+### 8.2 查看特定类型的债务
+
+```bash
+# 只查看安全相关的技术债
+/gc:type=security
+
+# 查看某个文件的债务
+/gc:file=src/services/auth.ts
+
+# 查看过期的TODO
+/gc:aging=stale
+```
+
+### 8.3 导出报告
+
+```bash
+# 导出为JSON（供CI/CD使用）
+/gc:export=json
+
+# 导出为Markdown（供人阅读）
+/gc:export=md
+
+# 导出趋势数据（供图表展示）
+/gc:export=trend
+```
+
+---
+
+## 九、最佳实践
+
+### 9.1 预防优于治疗
+
+```yaml
+prevention_rules:
+  
+  code_review_gates:
+    - 禁止提交包含 TODO/FIXME 的代码（除非有Ticket编号）
+    - 新代码不允许有魔法数字（必须使用常量）
+    - 重复代码必须在Review阶段提取
+      
+  ci_cd_integration:
+    - PR必须通过技术债门禁（总分<阈值）
+    - 新增技术债需要说明原因和修复计划
+    - 定期运行全量扫描（每周至少一次）
+      
+  team_practices:
+    - 每个Sprint分配20%时间处理技术债
+    - Code Review时主动识别潜在技术债
+    - 定期进行技术债清理活动（Hackathon风格）
+```
+
+### 9.2 渐进式清理策略
+
+```yaml
+cleanup_strategy:
+  
+  phase_1_quick_wins:    # 第1周：快速胜利
+    target: "消除所有致命和高优先级的简单债务"
+    examples:
+      - 删除死代码
+      - 提取明显的魔法数字
+      - 解决简单的TODO
+    expected_reduction: "-30%"
+    
+  phase_2_architecture:  # 第2-3周：架构改善
+    target: "解决循环依赖和分层违规"
+    examples:
+      - 重构模块依赖关系
+      - 引入依赖注入
+      - 拆分上帝类
+    expected_reduction: "-25%"
+    
+  phase_3_systematic:   # 持续进行：系统化治理
+    target: "建立预防机制，控制新增速度"
+    examples:
+      - 强化Code Review标准
+      - 集成到CI/CD流程
+      - 团队培训和意识提升
+    goal: "维持技术债在健康水平(<100分)"
+```
+
+---
+
+*文档版本: 2.0.0 | 最后更新: 2026-04-30 | 维护者: Boss-auto-harness Team*

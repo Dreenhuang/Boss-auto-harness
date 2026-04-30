@@ -1,0 +1,1498 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Boss-auto-harness v2.0 完整使用教程 - AI全自动开发模式官方文档">
+    <meta name="author" content="Boss-harness (woshiboss666)">
+    <title>Boss-auto-harness v2.0 完整使用教程 | AI全自动开发模式</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary-color: #0ea5e9;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --code-bg: #0d1117;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.2);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --max-width: 1200px;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .header-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 2rem;
+            margin-left: auto;
+        }
+
+        .header-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .header-nav a:hover {
+            color: var(--primary-light);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 2rem 0;
+            transition: var(--transition);
+            z-index: 900;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .toc-title {
+            padding: 0 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            padding: 0;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 0.5rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+            transition: var(--transition);
+        }
+
+        .toc-list a:hover,
+        .toc-list a.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary-light);
+            border-left-color: var(--primary-color);
+        }
+
+        .toc-list .toc-h3 a {
+            padding-left: 2.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+            padding: 3rem 4rem;
+            max-width: calc(var(--max-width) + var(--sidebar-width));
+        }
+
+        .content-wrapper {
+            max-width: var(--max-width);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge.primary {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--primary-color);
+            color: var(--primary-light);
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .section-subtitle {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin: 2rem 0 1rem;
+        }
+
+        .section-desc {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin: 2rem 0;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        /* Code Blocks */
+        .code-block {
+            position: relative;
+            margin: 1.5rem 0;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .code-lang {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .copy-btn {
+            background: var(--bg-tertiary);
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        pre {
+            margin: 0;
+            padding: 1rem;
+            background: var(--code-bg);
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Inline code */
+        :not(pre) > code {
+            background: var(--bg-tertiary);
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        /* Syntax highlighting */
+        .keyword { color: #ff7b72; }
+        .string { color: #a5d6ff; }
+        .comment { color: #8b949e; font-style: italic; }
+        .function { color: #d2a8ff; }
+        .number { color: #79c0ff; }
+        .operator { color: #ff7b72; }
+
+        /* Lists */
+        .content-list {
+            margin: 1.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .content-list li {
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .content-list li strong {
+            color: var(--text-primary);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: var(--radius-md);
+            border-left: 4px solid;
+        }
+
+        .callout.info {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: var(--secondary-color);
+        }
+
+        .callout.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success-color);
+        }
+
+        .callout.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--warning-color);
+        }
+
+        .callout.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error-color);
+        }
+
+        .callout-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .callout.info .callout-title { color: var(--secondary-color); }
+        .callout.success .callout-title { color: var(--success-color); }
+        .callout.warning .callout-title { color: var(--warning-color); }
+        .callout.error .callout-title { color: var(--error-color); }
+
+        /* Flow Diagram */
+        .flow-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        /* Architecture Diagram */
+        .arch-diagram {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .arch-layer {
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .arch-layer-title {
+            font-weight: 700;
+            color: var(--primary-light);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Steps */
+        .steps {
+            margin: 2rem 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 3rem 4rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 4rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-light);
+        }
+
+        /* Scroll to top */
+        .scroll-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.25rem;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 999;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-top:hover {
+            background: var(--primary-dark);
+            transform: translateY(-4px);
+        }
+
+        /* Search */
+        .search-container {
+            padding: 0 1.5rem 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+
+            .header-nav {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-badges {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .footer {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Print Styles */
+        @media print {
+            .header, .sidebar, .scroll-top {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 0;
+            }
+            
+            body {
+                background: white;
+                color: black;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <a href="#" class="header-logo">🚀 Boss-auto-harness</a>
+        <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+        <nav class="header-nav">
+            <a href="#concept">基本概念</a>
+            <a href="#features">核心功能</a>
+            <a href="#usage">使用教程</a>
+            <a href="#faq">常见问题</a>
+            <a href="https://github.com/woshiboss666/Boss-auto-harness" target="_blank">GitHub</a>
+        </nav>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索文档..." aria-label="搜索文档">
+        </div>
+        <h3 class="toc-title">目录导航</h3>
+        <ul class="toc-list" id="tocList">
+            <li><a href="#concept" data-section="concept">一、基本概念</a></li>
+            <li class="toc-h3"><a href="#what-is">1.1 什么是 Boss-auto-harness</a></li>
+            <li class="toc-h3"><a href="#design">1.2 设计理念</a></li>
+            <li class="toc-h3"><a href="#architecture">1.3 核心架构</a></li>
+            <li><a href="#features" data-section="features">二、核心功能</a></li>
+            <li class="toc-h3"><a href="#skills">2.1 17个核心技能</a></li>
+            <li class="toc-h3"><a href="#boss-mode">2.2 Boss 模式</a></li>
+            <li class="toc-h3"><a href="#agents">2.3 4个智能体</a></li>
+            <li><a href="#scenarios" data-section="scenarios">三、适用场景</a></li>
+            <li><a href="#quickstart" data-section="quickstart">四、快速开始</a></li>
+            <li><a href="#steps" data-section="steps">五、详细操作步骤</a></li>
+            <li class="toc-h3"><a href="#step-requirement">5.1 需求收集</a></li>
+            <li class="toc-h3"><a href="#step-design">5.2 设计规范</a></li>
+            <li class="toc-h3"><a href="#step-plan">5.3 开发计划</a></li>
+            <li class="toc-h3"><a href="#step-dev">5.4 项目开发</a></li>
+            <li class="toc-h3"><a href="#step-release">5.5 构建发布</a></li>
+            <li class="toc-h3"><a href="#step-deploy">5.6 部署上线</a></li>
+            <li><a href="#advanced" data-section="advanced">六、高级功能与技巧</a></li>
+            <li><a href="#faq" data-section="faq">七、常见问题解答</a></li>
+            <li><a href="#best-practices" data-section="best-practices">八、最佳实践</a></li>
+            <li><a href="#structure" data-section="structure">九、项目结构与配置</a></li>
+            <li><a href="#install" data-section="install">十、全局安装指南</a></li>
+            <li><a href="#cross-platform" data-section="cross-platform">跨平台兼容方案</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero">
+                <h1 class="hero-title">Boss-auto-harness v2.0 完整使用教程</h1>
+                <p class="hero-subtitle">AI全自动开发模式 - 从想法到产品的端到端解决方案</p>
+                <div class="hero-badges">
+                    <span class="badge primary">v2.0.0</span>
+                    <span class="badge">📅 2026-04-30</span>
+                    <span class="badge">👨‍💻 Boss-harness</span>
+                    <span class="badge">📜 MIT License</span>
+                </div>
+            </section>
+
+            <!-- Section 1: Basic Concepts -->
+            <section id="concept" class="section">
+                <h2 class="section-title">一、基本概念</h2>
+                
+                <h3 id="what-is" class="section-subtitle">1.1 什么是 Boss-auto-harness？</h3>
+                <p class="section-desc">Boss-auto-harness 是一套基于 TRAE IDE 的<strong>AI全自动开发模式技能包</strong>。它将产品经理的思维模式与全栈开发能力深度融合，通过结构化的 Skill 体系，实现从需求收集到部署上线的完整产品开发流程。</p>
+
+                <h3 id="design" class="section-subtitle">1.2 设计理念</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-icon">🧠</div>
+                        <h4 class="card-title">Boss-harness 角色</h4>
+                        <p class="card-desc">资深产品经理兼全栈开发教练，负责引导用户完成产品开发的完整旅程</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🤖</div>
+                        <h4 class="card-title">全自动开发</h4>
+                        <p class="card-desc">从模糊想法到可运行产品的端到端自动化流程</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">✅</div>
+                        <h4 class="card-title">质量保障</h4>
+                        <p class="card-desc">内置代码审查、测试验证、质量门禁等多重保障机制</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">📝</div>
+                        <h4 class="card-title">可追溯性</h4>
+                        <p class="card-desc">全链路记录，所有决策和变更均可追溯</p>
+                    </div>
+                </div>
+
+                <h3 id="architecture" class="section-subtitle">1.3 核心架构</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">用户想法</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">需求收集</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">设计规范</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">开发计划</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">代码实现</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">质量门禁</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">自动化测试</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">代码审查</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">构建发布</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">部署上线</div>
+                </div>
+            </section>
+
+            <!-- Section 2: Core Features -->
+            <section id="features" class="section">
+                <h2 class="section-title">二、核心功能</h2>
+
+                <h3 id="skills" class="section-subtitle">2.1 17 个核心技能（Skills）</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>技能名称</th>
+                                <th>触发命令</th>
+                                <th>功能描述</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>product-spec-builder</td><td><code>/product-spec-builder</code></td><td>需求收集，生成产品需求文档</td></tr>
+                            <tr><td>design-brief-builder</td><td><code>/design-brief-builder</code></td><td>设计规范，生成设计指引</td></tr>
+                            <tr><td>design-maker</td><td><code>/design-maker</code></td><td>设计图制作，生成完整设计稿</td></tr>
+                            <tr><td>dev-planner</td><td><code>/dev-planner</code></td><td>开发计划，生成分阶段开发计划</td></tr>
+                            <tr><td>dev-builder</td><td><code>/dev-builder</code></td><td>项目开发，实现产品代码</td></tr>
+                            <tr><td>quality-gate</td><td><code>/quality-gate</code></td><td>质量门禁，执行 lint+typecheck+安全检查</td></tr>
+                            <tr><td>test-runner</td><td><code>/test-runner</code></td><td>自动化测试，单元+集成+E2E测试</td></tr>
+                            <tr><td>code-review</td><td><code>/code-review</code></td><td>代码审查，五大维度校验</td></tr>
+                            <tr><td>bug-fixer</td><td><code>/bug-fixer</code></td><td>Bug 修复，定位并修复问题</td></tr>
+                            <tr><td>record-keeper</td><td><code>/record-keeper</code></td><td>全链路记录，归档开发过程</td></tr>
+                            <tr><td>git-committer</td><td><code>/git-commit</code></td><td>Git 提交，自动化版本控制</td></tr>
+                            <tr><td>release-builder</td><td><code>/release-builder</code></td><td>构建发布，打包或部署</td></tr>
+                            <tr><td>deploy-engine</td><td><code>/deploy-engine</code></td><td>多目标部署，Vercel/Docker/VPS</td></tr>
+                            <tr><td>compatibility-checker</td><td><code>/compatibility-checker</code></td><td>兼容性验证，跨浏览器检查</td></tr>
+                            <tr><td>monitor-setup</td><td><code>/monitor-setup</code></td><td>监控告警，配置线上监控</td></tr>
+                            <tr><td>image-generator</td><td><code>/image-generator</code></td><td>图片生成，文生图/设计素材</td></tr>
+                            <tr><td>pipeline-engine</td><td><code>/pipeline-engine</code></td><td>Pipeline 编排，串联全流程</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 id="boss-mode" class="section-subtitle">2.2 Boss 模式（全自动开发模式）</h3>
+                <p class="section-desc">Boss 模式是真正的全自动开发模式，整合 TRAE Autonomous Coding Agent 的执行能力。</p>
+                
+                <div class="callout info">
+                    <div class="callout-title">📌 触发方式</div>
+                    <p>输入: <code>Boss</code>、<code>boss模式</code>、<code>boss moshi</code>、<code>Boss-harness</code>、<code>harness</code>、<code>全自动开发</code></p>
+                </div>
+
+                <h4>核心特性</h4>
+                <ul class="content-list">
+                    <li><strong>问题跳过机制</strong>：支持 <code>/跳过</code>、<code>/稍后问</code>、<code>/默认</code></li>
+                    <li><strong>待确认清单追踪</strong>：自动记录跳过的问题，关键节点再次询问</li>
+                    <li><strong>AI 自主决策</strong>：🟡类问题3次不答→AI基于最佳实践决策</li>
+                    <li><strong>竞品分析专项</strong>：自动搜索竞品+生成对比矩阵</li>
+                    <li><strong>市场环境扫描</strong>：行业现状+趋势洞察+机会窗口识别</li>
+                    <li><strong>用户画像构建</strong>：基础属性+行为特征+痛点挖掘</li>
+                    <li><strong>决策记录机制</strong>：所有重要决策留痕+多源交叉验证+置信度标记</li>
+                </ul>
+
+                <h3 id="agents" class="section-subtitle">2.3 4 个智能体（Agents）</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-icon">🔍</div>
+                        <h4 class="card-title">code-reviewer</h4>
+                        <p class="card-desc">审查代码 + 输出报告</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">⚡</div>
+                        <h4 class="card-title">implementer</h4>
+                        <p class="card-desc">编码实现 + 编译验证</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">📝</div>
+                        <h4 class="card-title">feedback-observer</h4>
+                        <p class="card-desc">记录用户反馈</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🧬</div>
+                        <h4 class="card-title">evolution-runner</h4>
+                        <p class="card-desc">扫描反馈 + 生成进化建议</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Scenarios -->
+            <section id="scenarios" class="section">
+                <h2 class="section-title">三、适用场景</h2>
+                
+                <h3 class="section-subtitle">适合的使用者</h3>
+                <ul class="content-list">
+                    <li><strong>独立开发者</strong>：想要快速将想法变为产品的开发者</li>
+                    <li><strong>产品经理</strong>：需要全栈开发能力的产品专业人士</li>
+                    <li><strong>创业者</strong>：需要快速验证产品原型的创业者</li>
+                    <li><strong>学习者</strong>：想学习产品开发流程的初学者</li>
+                </ul>
+
+                <h3 class="section-subtitle">适合的项目类型</h3>
+                <ul class="content-list">
+                    <li><strong>Web 应用</strong>：React/Vue/Next.js 等前端项目</li>
+                    <li><strong>后端服务</strong>：Node.js/Python/Go 等后端服务</li>
+                    <li><strong>全栈项目</strong>：前后端分离或单体应用</li>
+                    <li><strong>工具/库</strong>：CLI 工具、npm 包等</li>
+                    <li><strong>MVP 原型</strong>：快速验证想法的最小可行产品</li>
+                </ul>
+
+                <div class="callout warning">
+                    <div class="callout-title">⚠️ 不适合的场景</div>
+                    <ul class="content-list" style="margin: 0;">
+                        <li>大型企业级复杂系统（需要团队长期维护）</li>
+                        <li>高度定制化、特殊架构要求的项目</li>
+                        <li>已有成熟代码库的重构（需要人工评估）</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Section 4: Quick Start -->
+            <section id="quickstart" class="section">
+                <h2 class="section-title">四、快速开始</h2>
+
+                <h3 class="section-subtitle">4.1 安装方式</h3>
+                
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">PowerShell</span>
+                        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                    </div>
+                    <pre><code><span class="comment"># Windows (PowerShell) - 全局安装（推荐）</span>
+<span class="keyword">powershell</span> -ExecutionPolicy Bypass -File install.ps1
+
+<span class="comment"># Linux/macOS</span>
+<span class="keyword">bash</span> install.sh</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">bash</span>
+                        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                    </div>
+                    <pre><code><span class="comment"># 手动复制方式</span>
+<span class="comment"># 1. 克隆项目</span>
+<span class="keyword">git clone</span> https://github.com/woshiboss666/Boss-auto-harness.git
+<span class="keyword">cd</span> Boss-auto-harness
+
+<span class="comment"># 2. 复制 Skills 到项目</span>
+<span class="keyword">cp -r</span> skills/* .claude/skills/
+
+<span class="comment"># 3. 复制 CLAUDE.md 到项目</span>
+<span class="keyword">cp</span> CLAUDE.md .claude/
+
+<span class="comment"># 4. 复制 Agents 到项目（可选）</span>
+<span class="keyword">cp -r</span> trae-agents/* .trae/agents/</code></pre>
+                </div>
+
+                <h3 class="section-subtitle">4.2 首次使用</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-title">打开 TRAE IDE</div>
+                            <p>进入项目目录</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-title">输入触发词</div>
+                            <p>输入 <code>Boss</code> 或 <code>boss模式</code> 启动全自动开发模式</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-title">描述产品想法</div>
+                            <p>按照提示描述你的产品想法</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <div class="step-title">自动执行</div>
+                            <p>系统自动引导完成需求收集、设计、开发、测试、部署全流程</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-subtitle">4.3 基本命令</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Command</span>
+                        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                    </div>
+                    <pre><code><span class="comment"># 启动 Boss 模式</span>
+Boss
+boss模式
+全自动开发
+
+<span class="comment"># 手动调用技能</span>
+/product-spec-builder    <span class="comment"># 需求收集</span>
+/dev-planner             <span class="comment"># 开发计划</span>
+/dev-builder             <span class="comment"># 项目开发</span>
+/code-review             <span class="comment"># 代码审查</span>
+/quality-gate            <span class="comment"># 质量检查</span>
+/release-builder         <span class="comment"># 构建发布</span>
+
+<span class="comment"># Boss 模式指令</span>
+/跳过                    <span class="comment"># 跳过当前问题</span>
+/稍后问                  <span class="comment"># 加入待确认清单</span>
+/默认                    <span class="comment"># 接受AI推荐的默认值</span>
+/待确认                  <span class="comment"># 查看待确认清单</span>
+/决策                    <span class="comment"># 查看已做出的决策及依据</span>
+暂停                     <span class="comment"># 切换到标准模式</span></code></pre>
+                </div>
+            </section>
+
+            <!-- Section 5: Detailed Steps -->
+            <section id="steps" class="section">
+                <h2 class="section-title">五、详细操作步骤</h2>
+
+                <h3 id="step-requirement" class="section-subtitle">5.1 阶段一：需求收集</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-title">启动需求收集</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-lang">对话示例</span>
+                                </div>
+                                <pre><code>用户: 我想做一个任务管理应用
+AI: 启动 product-spec-builder，开始需求收集流程...</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-title">竞品分析（Boss 模式自动执行）</div>
+                            <p>系统自动搜索 3-5 个竞品，生成竞品分析矩阵，识别差异化机会。</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-title">市场扫描</div>
+                            <p>分析行业现状、趋势洞察、机会窗口识别。</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <div class="step-title">用户画像构建</div>
+                            <p>收集目标用户基础属性、行为特征、痛点挖掘。</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <div class="step-title">结构化需求确认</div>
+                            <p>6 大维度 30+ 确认项（🔴必须/🟡建议/⚪可选），支持跳过机制。</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <div class="step-title">生成产品需求文档</div>
+                            <p>输出 <code>Product-Spec.md</code>，包含功能描述、用户故事、验收标准等。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 id="step-dev" class="section-subtitle">5.4 阶段四：项目开发</h3>
+                
+                <h4>开发循环详解</h4>
+                <div class="flow-diagram">
+                    <div class="flow-step">编码</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">质量门禁</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">自动化测试</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">代码审查</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">通过/修复</div>
+                </div>
+
+                <div class="arch-diagram">
+                    <div class="arch-layer">
+                        <div class="arch-layer-title">质量门禁 (quality-gate)</div>
+                        <ul class="content-list" style="margin: 0; padding-left: 1rem;">
+                            <li>lint 检查</li>
+                            <li>类型检查 (tsc)</li>
+                            <li>安全扫描</li>
+                            <li>复杂度检查</li>
+                        </ul>
+                    </div>
+                    <div class="arch-layer">
+                        <div class="arch-layer-title">自动化测试 (test-runner)</div>
+                        <ul class="content-list" style="margin: 0; padding-left: 1rem;">
+                            <li>单元测试</li>
+                            <li>集成测试</li>
+                            <li>E2E 测试</li>
+                        </ul>
+                    </div>
+                    <div class="arch-layer">
+                        <div class="arch-layer-title">代码审查 (code-review)</div>
+                        <ul class="content-list" style="margin: 0; padding-left: 1rem;">
+                            <li>Stage 1: 需求匹配校验</li>
+                            <li>Stage 2: 代码质量检查</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 6: Advanced Features -->
+            <section id="advanced" class="section">
+                <h2 class="section-title">六、高级功能与技巧</h2>
+
+                <h3 class="section-subtitle">6.1 问题跳过机制</h3>
+                <p>在 Boss 模式需求收集阶段，你可以随时跳过不想立即回答的问题：</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Command</span>
+                    </div>
+                    <pre><code><span class="comment"># 跳过当前问题，继续下一个</span>
+/跳过
+
+<span class="comment"># 加入待确认清单，关键节点会再次询问</span>
+/稍后问
+
+<span class="comment"># 接受 AI 推荐的默认值</span>
+/默认</code></pre>
+                </div>
+
+                <h3 class="section-subtitle">6.2 AI 自主决策规则</h3>
+                <div class="card-grid">
+                    <div class="card" style="border-left: 4px solid var(--error-color);">
+                        <h4 class="card-title">🔴 类问题（必须）</h4>
+                        <p class="card-desc">强烈建议不跳过，坚持跳过则标记为"强制待确认"</p>
+                    </div>
+                    <div class="card" style="border-left: 4px solid var(--warning-color);">
+                        <h4 class="card-title">🟡 类问题（建议）</h4>
+                        <p class="card-desc">3次模糊回答后AI自主决策，标注[AI决策]并加入待确认清单</p>
+                    </div>
+                    <div class="card" style="border-left: 4px solid var(--text-muted);">
+                        <h4 class="card-title">⚪ 类问题（可选）</h4>
+                        <p class="card-desc">直接加入待确认清单，不阻塞流程</p>
+                    </div>
+                </div>
+
+                <h3 class="section-subtitle">6.3 全链路记录系统</h3>
+                <p>所有开发动作自动记录到 <code>docs/</code> 目录，包含溯源四件套：</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Markdown</span>
+                    </div>
+                    <pre><code><span class="comment">【开发溯源信息】</span>
+AI大模型: <span class="string">[当前使用的模型]</span>
+开发IDE: <span class="string">[当前使用的IDE]</span>
+操作日期: <span class="string">YYYY-MM-DD</span>
+操作时间: <span class="string">HH:MM</span></code></pre>
+                </div>
+            </section>
+
+            <!-- Section 7: FAQ -->
+            <section id="faq" class="section">
+                <h2 class="section-title">七、常见问题解答</h2>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h4 class="card-title">Q1: Boss 模式和标准模式有什么区别？</h4>
+                        <p class="card-desc">Boss 模式下 AI 自主决策、自动 review + 自动修复、自动 commit。标准模式每步确认用户。</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="card-title">Q2: 如何暂停 Boss 模式？</h4>
+                        <p class="card-desc">输入 <code>停</code>、<code>暂停</code> 或 <code>手动模式</code> 即可切换回标准模式。</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="card-title">Q3: 如何查看已做出的决策？</h4>
+                        <p class="card-desc">输入 <code>/决策</code> 查看所有决策记录及其依据和置信度。</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="card-title">Q4: 图片生成有数量限制吗？</h4>
+                        <p class="card-desc">是的，MiniMax API 限制 50 张/日。上午最多 30 张，下午/晚上可用至 50 张。</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="card-title">Q5: 如何保证代码质量？</h4>
+                        <p class="card-desc">内置 Quality Gate、三层测试、五大维度 Code Review、自动 Bug Fixer 多重保障。</p>
+                    </div>
+                    <div class="card">
+                        <h4 class="card-title">Q6: 如何自定义 Skills？</h4>
+                        <p class="card-desc">输入 <code>/skill-builder</code> 创建新 Skill，<code>/evolution-engine</code> 查看进化建议。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 8: Best Practices -->
+            <section id="best-practices" class="section">
+                <h2 class="section-title">八、最佳实践</h2>
+                
+                <h3 class="section-subtitle">需求收集阶段</h3>
+                <ul class="content-list">
+                    <li><strong>诚实面对需求</strong>：不要夸大功能范围，MVP 优先</li>
+                    <li><strong>明确目标用户</strong>：越具体越好，避免"所有人都是用户"</li>
+                    <li><strong>区分必须和可选</strong>：🔴类问题尽量当场确认</li>
+                    <li><strong>利用竞品分析</strong>：系统生成的竞品分析很有参考价值</li>
+                </ul>
+
+                <h3 class="section-subtitle">开发阶段</h3>
+                <ul class="content-list">
+                    <li><strong>小步快跑</strong>：让 AI 按 Task 逐步开发，便于审查</li>
+                    <li><strong>及时介入</strong>：发现方向偏差立即指出，不要等到 Phase 结束</li>
+                    <li><strong>善用跳过</strong>：对不确定但非关键的问题使用 <code>/跳过</code></li>
+                    <li><strong>保留设计稿</strong>：有设计稿时务必发给 AI 参考</li>
+                </ul>
+            </section>
+
+            <!-- Section 9: Project Structure -->
+            <section id="structure" class="section">
+                <h2 class="section-title">九、项目结构与配置</h2>
+                
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">Directory Structure</span>
+                        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                    </div>
+                    <pre><code>Boss-auto-harness/
+├── CLAUDE.md                    <span class="comment"># 主控配置文件</span>
+├── skills/                      <span class="comment"># 技能定义目录</span>
+│   ├── product-spec-builder/
+│   ├── design-brief-builder/
+│   ├── dev-planner/
+│   ├── dev-builder/
+│   ├── quality-gate/
+│   ├── test-runner/
+│   ├── code-review/
+│   ├── bug-fixer/
+│   ├── release-builder/
+│   ├── deploy-engine/
+│   ├── pipeline-engine/
+│   ├── compatibility-checker/
+│   ├── monitor-setup/
+│   ├── image-generator/
+│   └── record-keeper/
+├── trae-agents/                 <span class="comment"># TRAE 智能体配置</span>
+│   ├── boss-product-manager.md
+│   ├── git-committer.md
+│   └── ...
+├── install/                     <span class="comment"># 安装脚本</span>
+│   ├── install.ps1              <span class="comment"># Windows 安装脚本</span>
+│   └── install.sh               <span class="comment"># Linux/macOS 安装脚本</span>
+└── docs/                        <span class="comment"># 文档目录</span>
+    ├── 使用教程.md
+    └── index.html</code></pre>
+                </div>
+
+                <div class="callout info">
+                    <div class="callout-title">📌 触发关键词配置</div>
+                    <ul class="content-list" style="margin: 0;">
+                        <li><code>Boss</code> - 主触发词</li>
+                        <li><code>boss模式</code> - 中文模式触发</li>
+                        <li><code>boss moshi</code> - 拼音模式触发</li>
+                        <li><code>Boss-harness</code> - 完整项目名触发</li>
+                        <li><code>harness</code> - 简写触发</li>
+                        <li><code>全自动开发</code> - 保留触发词</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Section 10: Installation -->
+            <section id="install" class="section">
+                <h2 class="section-title">十、全局安装指南</h2>
+                
+                <h3 class="section-subtitle">10.1 Windows 安装</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">PowerShell</span>
+                        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                    </div>
+                    <pre><code><span class="comment"># 下载并运行安装脚本</span>
+<span class="keyword">powershell</span> -ExecutionPolicy Bypass -File install.ps1
+
+<span class="comment"># 安装完成后重启 TRAE IDE</span></code></pre>
+                </div>
+
+                <h3 class="section-subtitle">10.2 Linux/macOS 安装</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">bash</span>
+                        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+                    </div>
+                    <pre><code><span class="comment"># 下载并运行安装脚本</span>
+<span class="keyword">bash</span> install.sh
+
+<span class="comment"># 安装完成后重启 TRAE IDE</span></code></pre>
+                </div>
+
+                <h3 class="section-subtitle">10.3 验证安装</h3>
+                <ol class="content-list">
+                    <li>打开任意 TRAE 项目</li>
+                    <li>输入 <code>Boss</code> 或 <code>boss模式</code></li>
+                    <li>如果看到 Boss-harness 的初始化消息，说明安装成功</li>
+                </ol>
+
+                <div class="callout success">
+                    <div class="callout-title">✅ 安装成功标志</div>
+                    <p>看到 Boss-harness 角色介绍和可用技能列表，表示全局安装已完成。</p>
+                </div>
+            </section>
+
+            <!-- Cross Platform -->
+            <section id="cross-platform" class="section">
+                <h2 class="section-title">跨平台兼容方案</h2>
+                
+                <h3 class="section-subtitle">目标：让其他 AI 编程软件也能使用 Boss 模式</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>平台</th>
+                                <th>适配格式</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Cursor</td><td><code>.cursor/rules/</code></td><td>Cursor 规则文件格式</td></tr>
+                            <tr><td>Windsurf</td><td><code>.windsurf/rules/</code></td><td>Windsurf 规则文件</td></tr>
+                            <tr><td>VS Code + Copilot</td><td><code>.github/copilot-instructions.md</code></td><td>GitHub Copilot 指令文件</td></tr>
+                            <tr><td>Devin</td><td><code>devin.yaml</code></td><td>Devin 配置文件</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="callout info">
+                    <div class="callout-title">💡 快速迁移</div>
+                    <p>CLAUDE.md 本身是纯 Markdown 格式，可直接复制到其他平台：<code>.cursor/rules/boss-mode.md</code>、<code>.windsurf/rules/boss-mode.md</code>、<code>.github/copilot-instructions.md</code></p>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <div class="footer-content">
+                    <p class="footer-text"><strong>Boss-auto-harness v2.0</strong> | © 2026 Boss-harness (woshiboss666) | MIT License</p>
+                    <div class="footer-links">
+                        <a href="https://github.com/woshiboss666/Boss-auto-harness" target="_blank">GitHub</a>
+                        <a href="https://github.com/woshiboss666/Boss-auto-harness/issues" target="_blank">Issues</a>
+                        <a href="mailto:woshiboss666@gmail.com">Contact</a>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </main>
+
+    <!-- Scroll to top -->
+    <button class="scroll-top" id="scrollTop" aria-label="回到顶部">↑</button>
+
+    <script>
+        // Toggle sidebar on mobile
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // Scroll to top button
+        const scrollTopBtn = document.getElementById('scrollTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollTopBtn.classList.add('visible');
+            } else {
+                scrollTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Active TOC link on scroll
+        const tocLinks = document.querySelectorAll('.toc-list a');
+        const sections = document.querySelectorAll('section[id], h3[id]');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Copy code function
+        function copyCode(btn) {
+            const codeBlock = btn.closest('.code-block');
+            const code = codeBlock.querySelector('code');
+            const text = code.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = '✅ 已复制';
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                }, 2000);
+            });
+        }
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            tocLinks.forEach(link => {
+                const text = link.textContent.toLowerCase();
+                if (text.includes(query) || query === '') {
+                    link.style.display = 'block';
+                } else {
+                    link.style.display = 'none';
+                }
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Close sidebar on mobile after click
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('open');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
