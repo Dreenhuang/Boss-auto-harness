@@ -857,7 +857,7 @@ Boss Mode 启动
 ### 8.2 配置项
 
 ```yaml
-# .claude/orchestrator-config.yml（可选配置）
+# orchestrator-config.yml（可选配置）
 orchestrator:
   # 默认模式（当无法自动判断时使用）
   default_mode: dual-core

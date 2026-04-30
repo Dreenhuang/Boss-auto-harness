@@ -41,10 +41,10 @@ if (Test-Path $claudeSource) {
 }
 
 # ============================================================
-# 2. 复制.skills/目录到目标项目（如果需要项目级Skills）
+# 2. 复制skills/目录到目标项目（如果需要项目级Skills）
 # ============================================================
 $skillsSource = Join-Path $SourceDir "skills"
-$skillsTarget = Join-Path $TargetDir ".claude" "skills"
+$skillsTarget = Join-Path $TargetDir "skills"
 
 if (Test-Path $skillsSource) {
     if (-not (Test-Path $skillsTarget)) {
@@ -57,10 +57,10 @@ if (Test-Path $skillsSource) {
 }
 
 # ============================================================
-# 3. 创建.claude/agents/目录（如果需要）
+# 3. 创建agents/目录（如果需要）
 # ============================================================
 $agentsSource = Join-Path $SourceDir "trae-agents"
-$agentsTarget = Join-Path $TargetDir ".trae" "agents"
+$agentsTarget = Join-Path $TargetDir "agents"
 
 if (Test-Path $agentsSource) {
     if (-not (Test-Path $agentsTarget)) {

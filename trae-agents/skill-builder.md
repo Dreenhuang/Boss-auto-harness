@@ -1,4 +1,4 @@
-﻿---
+---
 description: 技能创建 - 创建新的 Skill
 mode: agent
 temperature: 0.2
@@ -105,7 +105,7 @@ CLAUDE.md 编排多个 Skill 的执行顺序和触发条件。
 逐个 Section 填写，如涉及不熟悉的领域 → WebSearch 了解最佳实践。
 
 ### 第五步：创建文件
-在 .claude/skills/[skill-name]/ 下创建 SKILL.md。
+在 skills/[skill-name]/ 下创建 SKILL.md。
 
 ### 第六步：注册到 CLAUDE.md
 补充：
@@ -117,8 +117,8 @@ CLAUDE.md 编排多个 Skill 的执行顺序和触发条件。
 
 ## 📁 输出文件
 
-- `.claude/skills/[skill-name]/SKILL.md`
-- `.claude/skills/[skill-name]/templates/`（如需要模板）
+- `skills/[skill-name]/SKILL.md`
+- `skills/[skill-name]/templates/`（如需要模板）
 
 ---
 

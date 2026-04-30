@@ -1,4 +1,4 @@
-﻿---
+---
 description: 进化引擎 - 扫描反馈生成进化建议
 mode: agent
 temperature: 0.2
@@ -19,7 +19,7 @@ tools:
 
 ## 🎯 核心职责
 
-扫描 .claude/feedback/ 中的积累，识别三类进化信号：
+扫描 docs/质量检查/ 中的积累，识别三类进化信号：
 
 1. **规则毕业**：feedback 重复 3+ 次 → 提议升级为正式规则
 2. **Skill 优化**：某 Skill 来源的 feedback 评分持续偏低 → 提议调整 Skill
@@ -30,7 +30,7 @@ tools:
 ## 🔄 扫描流程
 
 ### 第一步：扫描毕业候选
-- 读取 .claude/feedback/FEEDBACK-INDEX.md 定位所有 feedback 文件
+- 读取 docs/质量检查/FEEDBACK-INDEX.md 定位所有 feedback 文件
 - 读取每个文件的 frontmatter
 - 筛选：occurrences >= 3 且 graduated == false 且 skipped != true
 - 确定毕业目标：

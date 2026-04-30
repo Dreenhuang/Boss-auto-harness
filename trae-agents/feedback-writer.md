@@ -1,4 +1,4 @@
-﻿---
+---
 description: 反馈记录 - 记录用户修正和改进意见
 mode: agent
 temperature: 0.1
@@ -20,7 +20,7 @@ tools:
 ## 🎯 核心职责
 
 观察并记录用户反馈，推动产品经理技能包的持续进化。
-将反馈写入 .claude/feedback/ 目录，供 evolution-engine 分析。
+将反馈写入 docs/质量检查/ 目录，供 evolution-engine 分析。
 
 ---
 
@@ -62,7 +62,7 @@ Skill 执行完毕后，按 4 个维度打分（1-5）：
 
 ## 📁 文件规范
 
-**存放位置**：`~/.claude/feedback/`
+**存放位置**：`~/docs/质量检查/`
 
 **索引文件**：`FEEDBACK-INDEX.md`
 
@@ -72,7 +72,7 @@ Skill 执行完毕后，按 4 个维度打分（1-5）：
 
 ## 🔄 写入流程
 
-1. 读取 `.claude/feedback/FEEDBACK-INDEX.md`（如不存在则创建）
+1. 读取 `docs/质量检查/FEEDBACK-INDEX.md`（如不存在则创建）
 2. 检查是否已有同主题 feedback（去重）
    - 已有 → 更新内容 + occurrences +1 + 更新 updated
    - 没有 → 创建新文件 + 更新索引

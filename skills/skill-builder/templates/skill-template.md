@@ -115,7 +115,7 @@ description: [一句话描述：什么时候用、做什么、产出什么]
 | 项 | 规范 |
 |----|------|
 | Skill 名 | kebab-case（如 skill-builder、dev-planner） |
-| 目录位置 | .claude/skills/[skill-name]/ |
+| 目录位置 | skills/[skill-name]/ |
 | 主文件 | SKILL.md |
 | 模板文件 | templates/ 子目录（如有） |
 | Section 标题 | [标题] 格式 |

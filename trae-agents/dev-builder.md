@@ -1,4 +1,4 @@
-﻿---
+---
 description: 项目开发执行 - 根据 DEV-PLAN.md 按 Phase 开发代码
 mode: agent
 temperature: 0.2
@@ -75,7 +75,7 @@ project/
 │   ├── src/
 │   ├── package.json
 │   └── ...
-└── .claude/                # 框架定义
+└──                 # 框架定义
 ```
 
 ### 数据库结构规范

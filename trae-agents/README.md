@@ -1,4 +1,4 @@
-﻿# Boss-harness产品经理 AGENT 包 - 索引
+# Boss-harness产品经理 AGENT 包 - 索引
 
 > **版本**: 1.0.0  
 > **来源**: Boss-harness产品经理技能包 4.0  
@@ -82,7 +82,7 @@
 **反馈观察专家**
 
 - 触发条件：用户修正 AI 行为、提出改进意见
-- 功能：记录 feedback 到 .claude/feedback/ 目录
+- 功能：记录 feedback 到 docs/质量检查/ 目录
 - 维度：用户修正、未覆盖场景、重复操作、质量问题、效能评估
 
 ### 10. [evolution-engine.md](evolution-engine.md)

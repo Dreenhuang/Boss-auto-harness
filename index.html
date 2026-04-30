@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -892,10 +892,10 @@
             <button class="copy-btn" onclick="copyCode(this)">复制代码</button>
         </div>
         <pre><code><span class="comment"># 复制技能包到项目的.claude目录</span>
-<span class="keyword">cp -r</span> Boss-auto-harnesse/skills/* .claude/skills/
+<span class="keyword">cp -r</span> Boss-auto-harnesse/skills/* skills/
 
 <span class="comment"># 复制主配置文件</span>
-<span class="keyword">cp</span> Boss-auto-harnesse/CLAUDE.md .claude/
+<span class="keyword">cp</span> Boss-auto-harnesse/CLAUDE.md 
 
 <span class="comment"># （可选）复制TRAE Agent配置</span>
 <span class="keyword">cp -r</span> Boss-auto-harnesse/trae-agents/* .trae/agents/</code></pre>
@@ -1365,7 +1365,7 @@ later          <span class="comment"># 英文稍后处理指令</span></code></p
             <tr>
                 <td><strong>无法触发Boss Mode</strong></td>
                 <td>未正确安装或配置文件缺失</td>
-                <td>检查.claude/skills/和CLAUDE.md是否存在</td>
+                <td>检查skills/和CLAUDE.md是否存在</td>
             </tr>
             <tr>
                 <td><strong>AI频繁询问相同问题</strong></td>
@@ -1469,7 +1469,7 @@ later          <span class="comment"># 英文稍后处理指令</span></code></p
         <tbody>
             <tr>
                 <td><strong>CLAUDE.md</strong></td>
-                <td>.claude/</td>
+                <td></td>
                 <td>主配置文件，定义全局规则和行为</td>
             </tr>
             <tr>

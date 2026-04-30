@@ -2,7 +2,7 @@
 # Stop hook: 代码文件被修改但未 review 时阻止停止
 # 状态文件 .needs-review：needs_review = 阻止，clean = 放行并删除文件，不存在 = 放行
 
-STATE_FILE="$CLAUDE_PROJECT_DIR/.claude/.needs-review"
+STATE_FILE="$CLAUDE_PROJECT_DIR/.needs-review"
 
 if [ ! -f "$STATE_FILE" ]; then
   exit 0

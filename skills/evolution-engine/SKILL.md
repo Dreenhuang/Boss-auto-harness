@@ -4,7 +4,7 @@ description: 当 session 初始化时自动触发，或用户说"帮我看看有
 ---
 
 [任务]
-    扫描 .claude/feedback/ 中的积累，识别三类进化信号：
+    扫描 docs/质量检查/ 中的积累，识别三类进化信号：
     1. 规则毕业：feedback 重复 3+ 次 → 提议升级为正式规则
     2. Skill 优化：某 Skill 来源的 feedback 评分持续偏低 → 提议调整 Skill
     3. 新 Skill 提议：某操作模式反复出现但无 Skill 覆盖 → 提议创建新 Skill
@@ -15,7 +15,7 @@ description: 当 session 初始化时自动触发，或用户说"帮我看看有
 [扫描流程]
 
     第一步：扫描毕业候选
-        读取 .claude/feedback/FEEDBACK-INDEX.md 定位所有 feedback 文件
+        读取 docs/质量检查/FEEDBACK-INDEX.md 定位所有 feedback 文件
         读取每个文件的 frontmatter
         筛选：occurrences >= 3 且 graduated == false 且 skipped != true
         确定毕业目标：

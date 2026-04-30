@@ -3,7 +3,7 @@
 # 检查 FEEDBACK-INDEX.md 是否有需要处理的 feedback
 # 有条目 → 输出提醒派发 evolution-runner
 
-FEEDBACK_INDEX="$CLAUDE_PROJECT_DIR/.claude/feedback/FEEDBACK-INDEX.md"
+FEEDBACK_INDEX="$CLAUDE_PROJECT_DIR/feedback/FEEDBACK-INDEX.md"
 
 if [ ! -f "$FEEDBACK_INDEX" ]; then
   exit 0

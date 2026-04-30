@@ -16,7 +16,7 @@ ide_comparison:
   trae:
     full_name: "Trae IDE (字节跳动)"
     type: "专用AI IDE"
-    agent_system: "原生支持 (.claude/agents/)"
+    agent_system: "原生支持 (agents/)"
     skill_system: "原生支持 (Skills/)"
     custom_rules: "CLAUDE.md"
     strengths:
@@ -143,7 +143,7 @@ file_mapping:
   core_files:
     source: "CLAUDE.md"
     targets:
-      trae: ".claude/CLAUDE.md"           # 原生支持
+      trae: "CLAUDE.md"           # 原生支持
       cursor: ".cursor/rules/boss-mode.md" # 需转换
       windsurf: ".windsurf/rules/boss-mode.md"
       vscode: ".vscode/instructions.md"
@@ -153,7 +153,7 @@ file_mapping:
   agent_files:
     source_dir: "agents/"
     targets:
-      trae: ".claude/agents/"              # 原生支持
+      trae: "agents/"              # 原生支持
       cursor: ".cursor/agents/"            # 需模拟
       others: ".boss/agents/"             # 通用位置
       
@@ -187,7 +187,7 @@ trae_adapter:
     method: "复制到项目根目录"
     steps:
       - "复制 CLAUDE.md 到项目根目录"
-      - "复制 .claude/ 目录到项目根目录"
+      - "复制  目录到项目根目录"
       - "复制 Skills/ 目录到项目根目录"
       - "(可选) 复制 rules/, docs/, memory/"
       
@@ -431,7 +431,7 @@ claude_code_adapter:
     steps:
       - "安装Claude Code: npm install -g @anthropic-ai/claude-code"
       - "复制 CLAUDE.md 到项目目录"
-      - "复制 .claude/ 目录（如果使用）"
+      - "复制  目录（如果使用）"
       - "运行: claude"
       
   why_compatible: |
@@ -444,7 +444,7 @@ claude_code_adapter:
       # 几乎无需修改！
       
     settings: |
-      # ~/.claude/settings.json
+      # ~/settings.json
       {
         "permissions": {
           "allow": ["Bash(*)", "Read(*)", "Write(*)", "Edit(*)"],
@@ -531,7 +531,7 @@ copy_core_files() {
 case $ENV in
     trae)
         echo "✅ Trae 环境 - 原生安装"
-        cp -r .claude/ ./ 2>/dev/null || true
+        cp -r  ./ 2>/dev/null || true
         cp -r Skills/ ./ 2>/dev/null || true
         copy_core_files
         echo "🎉 安装完成！在Trae中输入 'boss' 启动Boss模式"

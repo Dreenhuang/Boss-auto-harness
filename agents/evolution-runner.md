@@ -14,7 +14,7 @@ color: purple
 
 [任务]
     收到主 Agent 派发后，使用 evolution-engine skill：
-    1. 扫描 .claude/feedback/ 中所有 feedback 文件
+    1. 扫描 docs/质量检查/ 中所有 feedback 文件
     2. 识别毕业候选（occurrences >= 3）、Skill 优化信号（评分偏低）、新 Skill 候选
     3. 有信号 → 生成结构化提议返回给主 Agent
     4. 无信号 → 返回"无进化建议"

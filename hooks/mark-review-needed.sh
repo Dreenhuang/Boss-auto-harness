@@ -14,7 +14,7 @@ case "$FILE_PATH" in
   *.md|*.txt|*.json|*.yaml|*.yml|*.toml|*.lock|*.log|*.env|*.env.*|*.gitignore|*.prettierrc|*.eslintrc)
     ;;
   *)
-    echo "needs_review" > "$CLAUDE_PROJECT_DIR/.claude/.needs-review"
+    echo "needs_review" > "$CLAUDE_PROJECT_DIR/.needs-review"
     ;;
 esac
 

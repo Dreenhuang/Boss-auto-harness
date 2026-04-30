@@ -95,7 +95,7 @@ description: 当 DEV-PLAN.md 就绪、用户说要开始写代码或继续开发
         这些规则在 quality-gate 检查时自动执行，不在编码时手动检查。
 
     [项目结构规范]
-        项目代码放在以项目名命名的子文件夹里，不平铺在根目录。根目录只放规划文档、设计资源和 .claude/ 框架。
+        项目代码放在以项目名命名的子文件夹里，不平铺在根目录。根目录只放规划文档、设计资源和  框架。
 
         ```
         project/
@@ -105,7 +105,7 @@ description: 当 DEV-PLAN.md 就绪、用户说要开始写代码或继续开发
         │   ├── src/
         │   ├── package.json
         │   └── ...
-        └── .claude/                # 框架定义
+        └──                 # 框架定义
         ```
 
         项目文件夹内部结构，根据技术栈约定组织：
@@ -471,7 +471,7 @@ description: 当 DEV-PLAN.md 就绪、用户说要开始写代码或继续开发
             11. 派发 code-reviewer 执行两阶段审查。code-reviewer 同样对照 Product-Spec.md、Design-Brief.md、DEV-PLAN.md 和设计稿审查
             12. Stage 1 失败（功能缺失）→ 补实现 → 重新派发 code-reviewer
             13. Stage 2 失败（代码质量）→ 调用 bug-fixer 修复 → 重新派发 code-reviewer
-            14. 两个 Stage 都通过 → TaskUpdate 标记完成 → 执行 Bash: echo clean > .claude/.needs-review 清除 review 状态 → commit
+            14. 两个 Stage 都通过 → TaskUpdate 标记完成 → 执行 Bash: echo clean > .needs-review 清除 review 状态 → commit
             15. 进入下一个 Task
 
             编码过程中始终遵循：

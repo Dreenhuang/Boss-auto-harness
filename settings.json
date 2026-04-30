@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/detect-feedback-signal.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/detect-feedback-signal.sh",
             "timeout": 5
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-evolution.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/check-evolution.sh",
             "timeout": 10
           }
         ]
@@ -31,7 +31,7 @@
           {
             "type": "command",
             "if": "Bash(git commit*)",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-commit-check.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/pre-commit-check.sh",
             "timeout": 30
           },
           {
@@ -51,7 +51,7 @@
           {
             "type": "command",
             "if": "Bash(git commit*)",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/auto-push.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/auto-push.sh",
             "timeout": 15
           }
         ]
@@ -61,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/mark-review-needed.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/mark-review-needed.sh",
             "timeout": 3
           }
         ]
@@ -73,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-gate.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/stop-gate.sh",
             "timeout": 5
           }
         ]

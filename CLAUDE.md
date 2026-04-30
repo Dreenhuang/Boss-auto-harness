@@ -1024,7 +1024,7 @@ loop_detection:
             → 失败 → 补实现 → 重新派发 code-reviewer
             ↓
         Stage 2 Code Quality 结果：
-            → 通过 → 执行 echo clean > .claude/.needs-review → commit → Task 完成 → 进入下一个 Task
+            → 通过 → 执行 echo clean > .needs-review → commit → Task 完成 → 进入下一个 Task
             → 失败 → 调用 bug-fixer 修复 → 重新派发 code-reviewer（从 Stage 1 开始）
 
         循环直到两个 Stage 都通过。
