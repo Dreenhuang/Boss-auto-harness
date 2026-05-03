@@ -6,8 +6,8 @@
           <User class="avatar-icon" />
         </div>
         <div class="user-details">
-          <h2 class="username">学习者</h2>
-          <p class="user-level">Lv.3 · 已学习12天</p>
+          <h2 class="username">{{ username }}</h2>
+          <p class="user-level">{{ userLevel }}</p>
         </div>
         <Settings class="settings-icon" />
       </div>
@@ -15,17 +15,17 @@
     
     <div class="stats-section">
       <div class="stat-item">
-        <span class="stat-value">28</span>
+        <span class="stat-value">{{ favoritesCount }}</span>
         <span class="stat-label">收藏</span>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <span class="stat-value">5</span>
+        <span class="stat-value">{{ pathCount }}</span>
         <span class="stat-label">路径</span>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <span class="stat-value">12</span>
+        <span class="stat-value">{{ studyDays }}</span>
         <span class="stat-label">天</span>
       </div>
     </div>
@@ -68,21 +68,47 @@
       </div>
     </div>
     
-    <div class="logout-btn">
+    <div class="logout-btn" @click="handleLogout">
       <span class="logout-text">退出登录</span>
     </div>
   </div>
 </template>
 
 <script setup>
+import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Settings, Heart, Map, Download, Bell, HelpCircle, ChevronRight } from 'lucide-vue-next'
+import { useUserStore } from '../stores/userStore.js'
 
 const router = useRouter()
+const userStore = useUserStore()
+
+const username = computed(() => userStore.userInfo?.nickname || userStore.userInfo?.name || '学习者')
+const userLevel = computed(() => {
+  const level = userStore.userInfo?.level || 3
+  const days = userStore.userInfo?.studyDays || 0
+  return `Lv.${level} · 已学习${days}天`
+})
+const favoritesCount = computed(() => userStore.userInfo?.favoritesCount || 12)
+const pathCount = computed(() => userStore.userInfo?.pathCount || 3)
+const studyDays = computed(() => userStore.userInfo?.studyDays || 7)
+
+onMounted(async () => {
+  try {
+    await userStore.loadProfile()
+  } catch (error) {
+    console.error('加载用户信息失败:', error)
+  }
+})
 
 const goToFavorites = () => router.push('/favorites')
 const goToPathList = () => router.push('/path-list')
 const goToExport = () => router.push('/export')
+
+const handleLogout = async () => {
+  userStore.logout()
+  router.push('/login')
+}
 </script>
 
 <style scoped>

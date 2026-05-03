@@ -88,22 +88,67 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ChevronLeft, Heart, Map, FileText, Download, File, Globe } from 'lucide-vue-next'
+import { exportApi } from '../services/api.js'
+import { useFavoriteStore } from '../stores/favoriteStore.js'
 
 const router = useRouter()
+const favoriteStore = useFavoriteStore()
+
 const selectedType = ref('favorites')
 const selectedFormat = ref('pdf')
+const exporting = ref(false)
 const settings = ref({
   includeImages: true,
   includeTags: true,
   includeDates: false
 })
 
+const contentIds = computed(() => {
+  if (selectedType.value === 'favorites') {
+    return favoriteStore.favorites.map(f => f.id || f.cardId)
+  }
+  return []
+})
+
 const goBack = () => router.back()
-const handleExport = () => {
-  alert('导出功能开发中...')
+
+const handleExport = async () => {
+  if (exporting.value) return
+
+  exporting.value = true
+  try {
+    const ids = contentIds.value
+    const result = await exportApi.exportContent(
+      selectedFormat.value,
+      ids,
+      {
+        type: selectedType.value,
+        includeImages: settings.value.includeImages,
+        includeTags: settings.value.includeTags,
+        includeDates: settings.value.includeDates
+      }
+    )
+
+    if (result.code === 200 && result.data?.downloadUrl) {
+      const link = document.createElement('a')
+      link.href = result.data.downloadUrl
+      link.download = `vibepm-export-${Date.now()}.${selectedFormat.value}`
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else {
+      alert(result.message || '导出失败，请稍后重试')
+    }
+  } catch (error) {
+    console.error('Export failed:', error)
+    alert('导出失败，请检查网络连接后重试')
+  } finally {
+    exporting.value = false
+  }
 }
 </script>
 

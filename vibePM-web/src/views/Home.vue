@@ -1,175 +1,162 @@
 <template>
   <div class="home-container">
-    <!-- 顶部导航 - 完全匹配原型 -->
     <div class="home-header">
       <div class="search-box" @click="goToSearch">
         <Icon icon="ri:search-line" class="search-icon" />
         <span class="search-placeholder">技术概念 / 工具 / 场景</span>
       </div>
-      <Icon icon="ri:notification-3-line" class="notification-icon" @click="goToMessage" />
+      <div class="notification-wrapper" @click="goToMessage">
+        <Icon icon="ri:notification-3-line" class="notification-icon" />
+        <div v-if="hasUnread" class="notification-dot"></div>
+      </div>
     </div>
 
-    <!-- 分类标签 - 匹配原型 -->
     <div class="category-bar">
       <div 
         class="category-item" 
-        :class="{ active: activeTab === tab.value }" 
-        v-for="tab in tabs" 
+        :class="{ active: postStore.activeTab === tab.value }" 
+        v-for="tab in postStore.tabs" 
         :key="tab.value"
-        @click="switchTab(tab.value)"
+        @click="postStore.switchTab(tab.value)"
       >
         {{ tab.label }}
       </div>
     </div>
 
-    <!-- 瀑布流内容 - 匹配原型 -->
-    <div class="waterfall-container">
+    <div class="waterfall-container" ref="scrollContainer" @scroll="handleScroll">
       <div class="waterfall-grid">
-        <div 
-          class="app-card" 
-          v-for="(post, index) in posts" 
-          :key="post.id"
-          @click="goToDetail(post)"
-          :style="{ animationDelay: (index * 0.05) + 's' }"
-        >
-          <!-- 卡片图片区域 -->
-          <div class="card-image" :style="{ height: post.height }">
-            <img :src="post.image" alt="" class="cover-img" />
-            <div class="category-badge">{{ post.category }}</div>
-          </div>
+        <div class="waterfall-column" ref="leftColumn">
+          <div 
+            class="app-card" 
+            v-for="post in leftPosts" 
+            :key="post.id"
+            @click="goToDetail(post)"
+          >
+            <div class="card-image" :style="{ height: post.height }">
+              <img :src="post.image" alt="" class="cover-img" loading="lazy" @error="handleImgError" />
+              <div class="category-badge">{{ post.category }}</div>
+            </div>
 
-          <!-- 卡片内容 -->
-          <div class="card-body">
-            <h3 class="card-title">{{ post.title }}</h3>
-            
-            <div class="card-footer">
-              <div class="author-info">
-                <img :src="post.avatar" alt="" class="author-avatar" />
-                <span class="author-name">{{ post.author }}</span>
-              </div>
+            <div class="card-body">
+              <h3 class="card-title">{{ post.title }}</h3>
               
-              <div class="like-btn" @click.stop="toggleLike(post.id)">
-                <Icon 
-                  :icon="likedPosts.has(post.id) ? 'ri:heart-3-fill' : 'ri:heart-3-line'" 
-                  :class="{ liked: likedPosts.has(post.id) }"
-                />
-                <span class="like-count">{{ formatCount(post.likes) }}</span>
+              <div class="card-footer">
+                <div class="author-info">
+                  <img :src="post.avatar" alt="" class="author-avatar" />
+                  <span class="author-name">{{ post.author }}</span>
+                </div>
+                
+                <div class="like-btn" @click.stop="handleLike(post.id)">
+                  <Icon 
+                    :icon="postStore.likedPosts.has(post.id) ? 'ri:heart-3-fill' : 'ri:heart-3-line'" 
+                    :class="{ liked: postStore.likedPosts.has(post.id) }"
+                  />
+                  <span class="like-count">{{ formatCount(post.likes) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="waterfall-column" ref="rightColumn">
+          <div 
+            class="app-card" 
+            v-for="post in rightPosts" 
+            :key="post.id"
+            @click="goToDetail(post)"
+          >
+            <div class="card-image" :style="{ height: post.height }">
+              <img :src="post.image" alt="" class="cover-img" loading="lazy" @error="handleImgError" />
+              <div class="category-badge">{{ post.category }}</div>
+            </div>
+
+            <div class="card-body">
+              <h3 class="card-title">{{ post.title }}</h3>
+              
+              <div class="card-footer">
+                <div class="author-info">
+                  <img :src="post.avatar" alt="" class="author-avatar" />
+                  <span class="author-name">{{ post.author }}</span>
+                </div>
+                
+                <div class="like-btn" @click.stop="handleLike(post.id)">
+                  <Icon 
+                    :icon="postStore.likedPosts.has(post.id) ? 'ri:heart-3-fill' : 'ri:heart-3-line'" 
+                    :class="{ liked: postStore.likedPosts.has(post.id) }"
+                  />
+                  <span class="like-count">{{ formatCount(post.likes) }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="load-more-tip">没有更多内容了</div>
+      <div v-if="postStore.loading" class="load-more-tip">加载中...</div>
+      <div v-else-if="!postStore.hasMore && postStore.posts.length > 0" class="load-more-tip">没有更多内容了</div>
+      <div v-else-if="!postStore.loading && postStore.posts.length === 0" class="empty-state">
+        <Icon icon="ri:inbox-line" class="empty-icon" />
+        <p class="empty-text">暂无内容</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import { usePostStore } from '../stores/postStore.js'
+import { useMessageStore } from '../stores/messageStore.js'
 
 const router = useRouter()
-const activeTab = ref('recommend')
-const likedPosts = ref(new Set([1, 3]))
+const postStore = usePostStore()
+const messageStore = useMessageStore()
+const scrollContainer = ref(null)
 
-const tabs = [
-  { label: '推荐', value: 'recommend' },
-  { label: '实战方案', value: 'practice' },
-  { label: '技术模型', value: 'tech' },
-  { label: 'AI 指标', value: 'ai' },
-  { label: '入门指南', value: 'guide' }
-]
+// 检查是否有未读消息
+const hasUnread = computed(() => messageStore.unreadCount > 0)
 
-// 模拟数据 - 完全匹配原型
-const posts = ref([
-  {
-    id: 1,
-    title: 'API 就像餐厅服务员：三分钟读懂接口原理',
-    author: '技术小白',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tech',
-    likes: 1205,
-    image: 'https://picsum.photos/seed/api1/400/300',
-    height: '220px',
-    category: '概念'
-  },
-  {
-    id: 2,
-    title: '2026年全栈开发选型：别用 WordPress 做电商了',
-    author: '架构师老王',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=arch',
-    likes: 892,
-    image: 'https://picsum.photos/seed/wp2/400/240',
-    height: '180px',
-    category: '避坑'
-  },
-  {
-    id: 3,
-    title: 'React vs Vue：2026年该选哪一个？全面对比',
-    author: '效率达人阿强',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=eff',
-    likes: 3421,
-    image: 'https://picsum.photos/seed/rv3/400/280',
-    height: '200px',
-    category: '对比'
-  },
-  {
-    id: 4,
-    title: '从零开始：18天掌握 AI 产品经理技能树',
-    author: '职场导师Lily',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lily',
-    likes: 567,
-    image: 'https://picsum.photos/seed/ai4/400/320',
-    height: '240px',
-    category: '路径'
-  },
-  {
-    id: 5,
-    title: '电商网站全栈选型指南（PDF可导出）',
-    author: '技术宅小明',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=xm',
-    likes: 231,
-    image: 'https://picsum.photos/seed/ec5/400/260',
-    height: '190px',
-    category: '工具'
-  },
-  {
-    id: 6,
-    title: '如何用自然语言理解复杂技术概念',
-    author: '学习教练',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=coach',
-    likes: 128,
-    image: 'https://picsum.photos/seed/nl6/400/290',
-    height: '210px',
-    category: '思维'
+// 瀑布流双列分配 - 交替分配到左右列
+const leftPosts = computed(() => {
+  return postStore.posts.filter((_, index) => index % 2 === 0)
+})
+
+const rightPosts = computed(() => {
+  return postStore.posts.filter((_, index) => index % 2 === 1)
+})
+
+onMounted(() => {
+  postStore.loadPosts(true)
+})
+
+const handleScroll = () => {
+  if (!scrollContainer.value) return
+  const { scrollTop, scrollHeight, clientHeight } = scrollContainer.value
+  if (scrollHeight - scrollTop - clientHeight < 200 && postStore.hasMore && !postStore.loading) {
+    postStore.loadPosts()
   }
-])
-
-const switchTab = (tab) => {
-  activeTab.value = tab
 }
 
 const goToSearch = () => router.push('/search')
-const goToMessage = () => router.push('/message')
-const goToDetail = () => router.push('/card-detail')
+const goToMessage = () => router.push('/main/message')
+const goToDetail = (post) => router.push(`/card-detail/${post.id}`)
 
-const toggleLike = (id) => {
-  if (likedPosts.value.has(id)) {
-    likedPosts.value.delete(id)
-  } else {
-    likedPosts.value.add(id)
-  }
+const handleLike = async (id) => {
+  await postStore.toggleLike(id)
+}
+
+const handleImgError = (e) => {
+  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0Y1RjVGNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjQ0NDQ0NDIiBmb250LXNpemU9IjE0Ij7lm77niYc8L3RleHQ+PC9zdmc+'
 }
 
 const formatCount = (num) => {
+  if (!num) return '0'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'k'
   return num.toString()
 }
 </script>
 
 <style scoped>
-/* 完全匹配原型的样式参数 */
 .home-container {
   height: 100vh;
   background-color: #F9F9F9;
@@ -178,11 +165,10 @@ const formatCount = (num) => {
   overflow: hidden;
 }
 
-/* 顶部导航 */
 .home-header {
   background: #ffffff;
   padding: 12px 16px;
-  padding-top: 48px;
+  padding-top: max(48px, env(safe-area-inset-top, 48px));
   display: flex;
   align-items: center;
   gap: 12px;
@@ -223,17 +209,33 @@ const formatCount = (num) => {
   font-size: 24px;
   color: #666666;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
   transition: all 0.2s ease;
 }
 
-.notification-icon:active {
+.notification-wrapper {
+  position: relative;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification-wrapper:active {
   background: rgba(0, 0, 0, 0.05);
   transform: scale(0.96);
 }
 
-/* 分类标签栏 */
+.notification-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: #FF2442;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
 .category-bar {
   background: #ffffff;
   border-bottom: 1px solid #F0F0F0;
@@ -281,7 +283,6 @@ const formatCount = (num) => {
   border-radius: 1px;
 }
 
-/* 瀑布流容器 */
 .waterfall-container {
   flex: 1;
   overflow-y: auto;
@@ -294,14 +295,19 @@ const formatCount = (num) => {
   display: none;
 }
 
-/* 瀑布流网格 - 匹配原型 */
 .waterfall-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.waterfall-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-/* 卡片样式 - 匹配原型 */
 .app-card {
   background: #ffffff;
   border-radius: 12px;
@@ -311,6 +317,7 @@ const formatCount = (num) => {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   animation: fadeInUp 0.3s ease forwards;
   opacity: 0;
+  break-inside: avoid;
 }
 
 .app-card:active {
@@ -328,7 +335,6 @@ const formatCount = (num) => {
   }
 }
 
-/* 卡片图片 */
 .card-image {
   position: relative;
   background: #E5E5E5;
@@ -341,7 +347,6 @@ const formatCount = (num) => {
   object-fit: cover;
 }
 
-/* 分类徽章 */
 .category-badge {
   position: absolute;
   top: 8px;
@@ -356,12 +361,10 @@ const formatCount = (num) => {
   font-weight: 500;
 }
 
-/* 卡片内容区 */
 .card-body {
   padding: 12px;
 }
 
-/* 标题 - 最多显示2行 */
 .card-title {
   font-size: 14px;
   font-weight: 700;
@@ -376,7 +379,6 @@ const formatCount = (num) => {
   -webkit-box-orient: vertical;
 }
 
-/* 底部信息 */
 .card-footer {
   display: flex;
   align-items: center;
@@ -403,7 +405,6 @@ const formatCount = (num) => {
   font-weight: 500;
 }
 
-/* 点赞按钮 */
 .like-btn {
   display: flex;
   align-items: center;
@@ -434,11 +435,29 @@ const formatCount = (num) => {
   font-weight: 600;
 }
 
-/* 加载提示 */
 .load-more-tip {
   text-align: center;
   font-size: 12px;
   color: #DDDDDD;
   padding: 40px 0 20px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: #E5E5E5;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #CCCCCC;
 }
 </style>

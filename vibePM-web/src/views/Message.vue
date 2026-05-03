@@ -4,7 +4,7 @@
     <div class="message-header">
       <h1 class="header-title">消息</h1>
       <div class="header-actions">
-        <span class="clear-btn" @click="clearAllUnread">清除未读</span>
+        <span class="clear-btn" @click="messageStore.clearAllUnread()">清除未读</span>
         <Icon icon="ri:settings-4-line" class="settings-icon" />
       </div>
     </div>
@@ -15,7 +15,7 @@
         class="quick-action-item" 
         v-for="(item, index) in quickActions" 
         :key="index"
-        @click="switchTab(item.id)"
+        @click="handleQuickAction(item.id)"
       >
         <div class="action-icon" :class="item.colorClass">
           <Icon :icon="item.icon" />
@@ -28,10 +28,10 @@
     <div class="message-tabs">
       <div 
         class="tab" 
-        :class="{ active: currentTab === tab.value }"
+        :class="{ active: messageStore.currentTab === tab.value }"
         v-for="tab in tabs"
         :key="tab.value"
-        @click="switchTab(tab.value)"
+        @click="messageStore.switchTab(tab.value)"
       >
         {{ tab.label }}
       </div>
@@ -43,7 +43,7 @@
         class="message-item" 
         v-for="(msg, index) in filteredMessages" 
         :key="index"
-        @click="markAsRead(msg.id)"
+        @click="messageStore.markAsRead(msg.id)"
       >
         <div class="avatar-wrapper">
           <img :src="msg.avatar" alt="" class="avatar" :style="{ background: msg.bgColor }" />
@@ -69,10 +69,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import { useMessageStore } from '../stores/messageStore.js'
+import { getLocalMessages } from '../services/localData.js'
 
-const currentTab = ref('all')
+const router = useRouter()
+const messageStore = useMessageStore()
 
 const quickActions = [
   { id: 'interaction', icon: 'ri:heart-3-line', label: '收到的赞', colorClass: 'red' },
@@ -87,90 +91,34 @@ const tabs = [
   { label: '系统', value: 'system' }
 ]
 
-// 模拟消息数据 - 匹配原型
-const messages = ref([
-  {
-    id: 1,
-    type: 'private',
-    name: '架构师老王',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=arch',
-    bgColor: '#F0F0F0',
-    content: '老弟，上次那个 API 的方案发我一份？',
-    time: '14:20',
-    unread: true
-  },
-  {
-    id: 2,
-    type: 'private',
-    name: '职场导师Lily',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lily',
-    bgColor: '#E0E0E0',
-    content: '你的学习计划已经制定好了，记得查看。',
-    time: '昨天',
-    unread: false
-  },
-  {
-    id: 3,
-    type: 'system',
-    name: '系统通知',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sys',
-    bgColor: '#D0D0D0',
-    content: '欢迎加入 Vibe PM！开启你的 AI 学习之旅。',
-    time: '05-01',
-    unread: false
-  },
-  {
-    id: 4,
-    type: 'interaction',
-    name: '技术小白',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tech',
-    bgColor: '#C0C0C0',
-    content: '赞了你的笔记《API 就像餐厅服务员》',
-    time: '1小时前',
-    unread: true
-  },
-  {
-    id: 5,
-    type: 'follow',
-    name: '码农小张',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dev',
-    bgColor: '#B0B0B0',
-    content: '开始关注了你',
-    time: '2小时前',
-    unread: true
-  },
-  {
-    id: 6,
-    type: 'comment',
-    name: 'AI探索者',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ai',
-    bgColor: '#A0A0A0',
-    content: '在评论中回复了你：这个比喻太妙了！',
-    time: '3小时前',
-    unread: false
-  }
-])
-
-// 过滤消息
+// 过滤消息 - 基于 store 中的数据
 const filteredMessages = computed(() => {
-  if (currentTab.value === 'all') return messages.value
-  if (currentTab.value === 'interaction') {
-    return messages.value.filter(m => ['interaction', 'follow', 'comment'].includes(m.type))
+  const msgs = messageStore.messages
+  const tab = messageStore.currentTab
+  if (tab === 'all') return msgs
+  if (tab === 'interaction') {
+    return msgs.filter(m => ['interaction', 'follow', 'comment'].includes(m.type))
   }
-  return messages.value.filter(m => m.type === currentTab.value)
+  return msgs.filter(m => m.type === tab)
 })
 
-const switchTab = (tab) => {
-  currentTab.value = tab
-}
+// 页面挂载时加载消息
+onMounted(async () => {
+  try {
+    await messageStore.loadMessages()
+  } catch (error) {
+    console.error('加载消息失败:', error)
+  }
 
-const markAsRead = (id) => {
-  const msg = messages.value.find(m => m.id === id)
-  if (msg) msg.unread = false
-}
+  // 如果API返回空数据，使用本地数据回退
+  if (!messageStore.messages || messageStore.messages.length === 0) {
+    messageStore.messages = getLocalMessages()
+  }
+})
 
-const clearAllUnread = () => {
-  messages.value.forEach(m => m.unread = false)
+const handleQuickAction = (id) => {
+  // 快捷操作统一切换到"互动"tab，因为点赞、关注、评论都属于互动
+  messageStore.switchTab('interaction')
 }
 </script>
 

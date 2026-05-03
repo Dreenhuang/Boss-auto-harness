@@ -1,64 +1,48 @@
 <template>
   <div class="detail-container">
     <div class="detail-header">
-      <ChevronLeft class="back-btn" @click="goBack" />
+      <Icon icon="ri:arrow-left-s-line" class="back-btn" @click="goBack" />
       <div class="header-title">卡片详情</div>
-      <Share2 class="share-btn" />
+      <Icon icon="ri:share-line" class="share-btn" />
     </div>
     
-    <div class="detail-content">
-      <div class="card-banner" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-        <Lightbulb class="banner-icon" />
+    <div class="detail-content" v-if="post">
+      <div class="card-banner" :style="{ background: bannerGradient }">
+        <Icon :icon="bannerIcon" class="banner-icon" />
       </div>
       
       <div class="card-info">
         <div class="card-type-row">
-          <div class="type-tag" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">概念卡</div>
-          <div class="type-tag" style="background: rgba(6, 182, 212, 0.1); color: #06b6d4;">技术地图</div>
+          <div class="type-tag" :style="typeTagStyle">{{ post.category || '概念' }}</div>
+          <div class="type-tag" style="background: rgba(6, 182, 212, 0.1); color: #06b6d4;">{{ post.type || '技术地图' }}</div>
         </div>
         
-        <h1 class="detail-title">API就像餐厅服务员</h1>
-        <p class="detail-desc">用生活化比喻，解释API是什么、怎么工作、为什么需要它</p>
+        <h1 class="detail-title">{{ post.title }}</h1>
+        <p class="detail-desc">{{ post.content ? post.content.replace(/[#*>`]/g, '').substring(0, 80) + '...' : '' }}</p>
         
         <div class="detail-tags">
-          <span class="detail-tag">API</span>
-          <span class="detail-tag">技术概念</span>
-          <span class="detail-tag">入门</span>
+          <span class="detail-tag" v-for="tag in (post.tags || [])" :key="tag">{{ tag }}</span>
         </div>
       </div>
       
-      <div class="detail-body">
-        <h2 class="section-title">什么是API？</h2>
-        <p class="section-text">想象你去餐厅吃饭。你坐在桌前，看着菜单点菜。服务员把你的订单送到厨房，然后把做好的菜端给你。</p>
-        <p class="section-text">在这个比喻中：</p>
-        <ul class="section-list">
-          <li><strong>你</strong> = 应用程序或用户</li>
-          <li><strong>菜单</strong> = API文档</li>
-          <li><strong>服务员</strong> = API</li>
-          <li><strong>厨房</strong> = 服务器或数据库</li>
-        </ul>
-        
-        <h2 class="section-title">API的作用</h2>
-        <p class="section-text">API就像服务员一样，负责传递信息。它让不同的软件系统能够互相通信，而不需要了解对方的内部工作原理。</p>
-        
-        <div class="highlight-box">
-          <Info class="highlight-icon" />
-          <p class="highlight-text">API让复杂的技术变得简单，你不需要知道厨房怎么做菜，只需要告诉服务员你想吃什么。</p>
-        </div>
-      </div>
+      <div class="detail-body" v-html="renderedContent"></div>
+    </div>
+
+    <div class="detail-content" v-else-if="loading">
+      <div class="loading-state">加载中...</div>
     </div>
     
     <div class="detail-footer">
       <div class="action-btn" @click="toggleFav">
-        <Heart class="action-icon" :class="{ filled: isFav }" />
+        <Icon :icon="isFav ? 'ri:heart-3-fill' : 'ri:heart-3-line'" class="action-icon" :class="{ filled: isFav }" />
         <span class="action-text">收藏</span>
       </div>
-      <div class="action-btn">
-        <Share2 class="action-icon" />
+      <div class="action-btn" @click="handleShare">
+        <Icon icon="ri:share-line" class="action-icon" />
         <span class="action-text">分享</span>
       </div>
-      <div class="action-btn">
-        <Download class="action-icon" />
+      <div class="action-btn" @click="handleExport">
+        <Icon icon="ri:download-line" class="action-icon" />
         <span class="action-text">导出</span>
       </div>
     </div>
@@ -66,15 +50,131 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { ChevronLeft, Share2, Lightbulb, Heart, Download, Info } from 'lucide-vue-next'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { Icon } from '@iconify/vue'
+import { usePostStore } from '../stores/postStore.js'
+import { useFavoriteStore } from '../stores/favoriteStore.js'
+import { exportApi } from '../services/api.js'
 
 const router = useRouter()
+const route = useRoute()
+const postStore = usePostStore()
+const favoriteStore = useFavoriteStore()
 const isFav = ref(false)
+const loading = ref(true)
+
+const post = computed(() => postStore.currentPost)
+
+const bannerGradient = computed(() => {
+  const gradients = {
+    concept: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    practice: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+    tech: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+    ai: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+    guide: 'linear-gradient(135deg, #10b981, #06b6d4)'
+  }
+  return gradients[post.value?.type] || gradients.concept
+})
+
+const bannerIcon = computed(() => {
+  const icons = {
+    concept: 'ri:lightbulb-line',
+    practice: 'ri:code-s-slash-line',
+    tech: 'ri:cpu-line',
+    ai: 'ri:robot-line',
+    guide: 'ri:compass-3-line'
+  }
+  return icons[post.value?.type] || 'ri:lightbulb-line'
+})
+
+const typeTagStyle = computed(() => {
+  const styles = {
+    concept: { background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' },
+    practice: { background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
+    tech: { background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' },
+    ai: { background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' },
+    guide: { background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }
+  }
+  return styles[post.value?.type] || styles.concept
+})
+
+const renderedContent = computed(() => {
+  if (!post.value?.content) return '<p>暂无内容</p>'
+  return post.value.content
+    .replace(/^### (.*$)/gm, '<h3 class="section-title">$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2 class="section-title">$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1 class="section-title">$1</h1>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^- (.*$)/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul class="section-list">$1</ul>')
+    .replace(/^> (.*$)/gm, '<div class="highlight-box"><p class="highlight-text">$1</p></div>')
+    .replace(/\n\n/g, '</p><p class="section-text">')
+    .replace(/^(?!<)/, '<p class="section-text">')
+    .replace(/(?!>)$/, '</p>')
+})
+
+onMounted(async () => {
+  const id = route.params.id
+  if (id) {
+    await postStore.loadPostDetail(id)
+  }
+  loading.value = false
+})
 
 const goBack = () => router.back()
-const toggleFav = () => isFav.value = !isFav.value
+
+const toggleFav = async () => {
+  if (!post.value) return
+  if (isFav.value) {
+    await favoriteStore.removeFavorite(post.value.id)
+  } else {
+    await favoriteStore.addFavorite(post.value.id)
+  }
+  isFav.value = !isFav.value
+}
+
+const handleShare = () => {
+  if (navigator.share && post.value) {
+    navigator.share({ title: post.value.title, text: post.value.content?.substring(0, 100), url: window.location.href })
+  }
+}
+
+const handleExport = async () => {
+  if (!post.value) return
+  try {
+    const result = await exportApi.exportContent('md', [post.value.id], { includeTags: true, includeDates: true })
+    if (result.code === 200 && result.data?.downloadUrl) {
+      const a = document.createElement('a')
+      a.href = result.data.downloadUrl
+      a.download = result.data.fileName
+      a.click()
+    } else {
+      // API不可用时，使用浏览器原生方式导出为文本
+      const content = `# ${post.value.title}\n\n${post.value.content || ''}`
+      const blob = new Blob([content], { type: 'text/markdown' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${post.value.title || 'export'}.md`
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+  } catch (error) {
+    console.error('导出失败，使用本地导出:', error)
+    // 降级为浏览器原生导出
+    if (post.value) {
+      const content = `# ${post.value.title}\n\n${post.value.content || ''}`
+      const blob = new Blob([content], { type: 'text/markdown' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${post.value.title || 'export'}.md`
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -95,8 +195,7 @@ const toggleFav = () => isFav.value = !isFav.value
 }
 
 .back-btn, .share-btn {
-  width: 24px;
-  height: 24px;
+  font-size: 24px;
   color: #333333;
   cursor: pointer;
 }
@@ -114,6 +213,13 @@ const toggleFav = () => isFav.value = !isFav.value
   overflow-y: auto;
 }
 
+.loading-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #999;
+  font-size: 14px;
+}
+
 .card-banner {
   height: 120px;
   display: flex;
@@ -122,8 +228,7 @@ const toggleFav = () => isFav.value = !isFav.value
 }
 
 .banner-icon {
-  width: 48px;
-  height: 48px;
+  font-size: 48px;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -162,6 +267,7 @@ const toggleFav = () => isFav.value = !isFav.value
 .detail-tags {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .detail-tag {
@@ -178,6 +284,39 @@ const toggleFav = () => isFav.value = !isFav.value
   margin-top: 8px;
 }
 
+.detail-footer {
+  height: 56px;
+  background: #ffffff;
+  display: flex;
+  border-top: 1px solid #eeeeee;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.action-icon {
+  font-size: 20px;
+  color: #666666;
+  margin-bottom: 4px;
+}
+
+.action-icon.filled {
+  color: #ff2442;
+}
+
+.action-text {
+  font-size: 11px;
+  color: #666666;
+}
+</style>
+
+<style>
 .section-title {
   font-size: 16px;
   font-weight: 600;
@@ -213,54 +352,12 @@ const toggleFav = () => isFav.value = !isFav.value
   border-left: 4px solid #6366f1;
   padding: 12px;
   border-radius: 0 8px 8px 0;
-  display: flex;
-  align-items: center;
   margin-top: 16px;
-}
-
-.highlight-icon {
-  width: 20px;
-  height: 20px;
-  color: #6366f1;
-  margin-right: 12px;
 }
 
 .highlight-text {
   font-size: 14px;
   color: #333333;
   line-height: 1.6;
-}
-
-.detail-footer {
-  height: 56px;
-  background: #ffffff;
-  display: flex;
-  border-top: 1px solid #eeeeee;
-}
-
-.action-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.action-icon {
-  width: 20px;
-  height: 20px;
-  color: #666666;
-  margin-bottom: 4px;
-}
-
-.action-icon.filled {
-  color: #ff2442;
-  fill: #ff2442;
-}
-
-.action-text {
-  font-size: 11px;
-  color: #666666;
 }
 </style>

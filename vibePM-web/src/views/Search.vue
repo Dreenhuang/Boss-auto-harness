@@ -46,32 +46,86 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ChevronLeft, X, Trash2, ChevronRight, Lightbulb, Wrench, AlertTriangle } from 'lucide-vue-next'
+import { searchApi } from '../services/api.js'
+import { getLocalHotSearches } from '../services/localData.js'
 
 const router = useRouter()
 const searchQuery = ref('')
+const hotSearches = ref([])
+const searchResults = ref([])
+const isSearching = ref(false)
+const history = ref(['API是什么', 'React vs Vue', '电商网站选型'])
 
-const history = ['API是什么', 'React vs Vue', '电商网站选型']
+// 图标映射：根据API返回的type/category字段匹配对应图标
+const iconMap = {
+  concept: { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1' },
+  tool: { iconComponent: Wrench, iconBg: 'rgba(16, 185, 129, 0.1)', iconColor: '#10b981' },
+  warning: { iconComponent: AlertTriangle, iconBg: 'rgba(245, 158, 11, 0.1)', iconColor: '#f59e0b' },
+  default: { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1' }
+}
 
-const hotSearches = ['API概念解释', '前端框架对比', '电商技术栈', 'AI工具推荐', '数据库选型']
+function mapResultItem(item) {
+  const iconInfo = iconMap[item.type || item.category] || iconMap.default
+  return {
+    ...item,
+    iconComponent: iconInfo.iconComponent,
+    iconBg: iconInfo.iconBg,
+    iconColor: iconInfo.iconColor
+  }
+}
 
-const allResults = [
-  { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1', title: 'API就像餐厅服务员', desc: '用生活化比喻解释API' },
-  { iconComponent: Wrench, iconBg: 'rgba(16, 185, 129, 0.1)', iconColor: '#10b981', title: 'AI工具入门', desc: 'ChatGPT、Claude对比' },
-  { iconComponent: AlertTriangle, iconBg: 'rgba(245, 158, 11, 0.1)', iconColor: '#f59e0b', title: '别用WordPress做电商', desc: 'WordPress电商避坑指南' }
-]
+const filteredResults = computed(() => searchResults.value)
 
-const filteredResults = computed(() => {
-  if (!searchQuery.value) return []
-  return allResults.filter(r => r.title.includes(searchQuery.value) || r.desc.includes(searchQuery.value))
+onMounted(async () => {
+  try {
+    const res = await searchApi.getHotSearches()
+    if (res.code === 200 && res.data) {
+      hotSearches.value = Array.isArray(res.data) ? res.data : res.data.list || res.data.keywords || []
+    }
+    // API返回空数据时使用本地数据
+    if (hotSearches.value.length === 0) {
+      hotSearches.value = getLocalHotSearches()
+    }
+  } catch (e) {
+    console.error('获取热门搜索失败，使用本地数据:', e)
+    hotSearches.value = getLocalHotSearches()
+  }
 })
 
+let searchTimer = null
+const handleSearch = () => {
+  clearTimeout(searchTimer)
+  if (!searchQuery.value.trim()) {
+    searchResults.value = []
+    return
+  }
+  searchTimer = setTimeout(async () => {
+    isSearching.value = true
+    try {
+      const res = await searchApi.search(searchQuery.value)
+      if (res.code === 200 && res.data) {
+        const list = Array.isArray(res.data) ? res.data : res.data.list || []
+        searchResults.value = list.map(mapResultItem)
+      } else {
+        searchResults.value = []
+      }
+    } catch (e) {
+      console.error('搜索失败:', e)
+      searchResults.value = []
+    }
+    isSearching.value = false
+  }, 300)
+}
+
 const goBack = () => router.back()
-const clearSearch = () => searchQuery.value = ''
-const clearHistory = () => history.value = []
-const handleSearch = () => {}
+const clearSearch = () => {
+  searchQuery.value = ''
+  searchResults.value = []
+}
+const clearHistory = () => { history.value = [] }
 </script>
 
 <style scoped>

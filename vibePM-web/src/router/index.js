@@ -21,6 +21,11 @@ const routes = [
     component: () => import('@/views/Questionnaire.vue')
   },
   {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Login.vue')
+  },
+  {
     path: '/main',
     component: () => import('@/layouts/MainLayout.vue'),
     children: [
@@ -51,7 +56,7 @@ const routes = [
     ]
   },
   {
-    path: '/card-detail',
+    path: '/card-detail/:id?',
     name: 'CardDetail',
     component: () => import('@/views/CardDetail.vue')
   },
@@ -71,7 +76,7 @@ const routes = [
     component: () => import('@/views/PathList.vue')
   },
   {
-    path: '/path-detail',
+    path: '/path-detail/:id',
     name: 'PathDetail',
     component: () => import('@/views/PathDetail.vue')
   },

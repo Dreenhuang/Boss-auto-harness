@@ -40,13 +40,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Monitor, Target, Sparkles } from 'lucide-vue-next'
 
 const router = useRouter()
 const currentPage = ref(0)
 const swiperRef = ref(null)
+const touchStartX = ref(0)
+const touchEndX = ref(0)
 
 const pages = [
   {
@@ -75,6 +77,12 @@ const nextPage = () => {
   }
 }
 
+const prevPage = () => {
+  if (currentPage.value > 0) {
+    currentPage.value--
+  }
+}
+
 const skipGuide = () => {
   router.push('/main/home')
 }
@@ -82,6 +90,37 @@ const skipGuide = () => {
 const startLearning = () => {
   router.push('/questionnaire')
 }
+
+// 触摸滑动支持
+const handleTouchStart = (e) => {
+  touchStartX.value = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e) => {
+  touchEndX.value = e.changedTouches[0].clientX
+  const diff = touchStartX.value - touchEndX.value
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) {
+      nextPage()
+    } else {
+      prevPage()
+    }
+  }
+}
+
+onMounted(() => {
+  if (swiperRef.value) {
+    swiperRef.value.addEventListener('touchstart', handleTouchStart, { passive: true })
+    swiperRef.value.addEventListener('touchend', handleTouchEnd, { passive: true })
+  }
+})
+
+onUnmounted(() => {
+  if (swiperRef.value) {
+    swiperRef.value.removeEventListener('touchstart', handleTouchStart)
+    swiperRef.value.removeEventListener('touchend', handleTouchEnd)
+  }
+})
 </script>
 
 <style scoped>

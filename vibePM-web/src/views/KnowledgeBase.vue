@@ -12,14 +12,14 @@
       <div class="entry-card" @click="goToFavorites">
         <Icon icon="ri:heart-3-line" class="entry-icon heart-icon" />
         <span class="entry-title">收藏笔记</span>
-        <span class="entry-count">128 篇</span>
+        <span class="entry-count">{{ knowledgeStore.stats.favorites || 0 }} 篇</span>
       </div>
 
       <!-- 学习路径 -->
       <div class="entry-card" @click="goToPaths">
         <Icon icon="ri:road-map-line" class="entry-icon path-icon" />
         <span class="entry-title">学习路径</span>
-        <span class="entry-count">3 条在练</span>
+        <span class="entry-count">{{ knowledgeStore.stats.paths || 0 }} 条在练</span>
       </div>
     </div>
 
@@ -35,7 +35,7 @@
       <div class="progress-list">
         <div 
           class="progress-item" 
-          v-for="(item, index) in progressList" 
+          v-for="(item, index) in pathStore.progressList" 
           :key="index"
         >
           <div class="progress-item-header">
@@ -74,7 +74,7 @@
       <div class="recent-list">
         <div 
           class="recent-item" 
-          v-for="(item, index) in recentPosts" 
+          v-for="(item, index) in knowledgeStore.recentViews" 
           :key="index"
           @click="goToDetail"
         >
@@ -91,41 +91,54 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import { useKnowledgeStore } from '../stores/knowledgeStore.js'
+import { usePathStore } from '../stores/pathStore.js'
+import { useFavoriteStore } from '../stores/favoriteStore.js'
+import { getLocalKnowledgeStats, getLocalProgress } from '../services/localData.js'
 
 const router = useRouter()
+const knowledgeStore = useKnowledgeStore()
+const pathStore = usePathStore()
+const favoriteStore = useFavoriteStore()
 
-// 学习进度数据 - 匹配原型
-const progressList = ref([
-  { title: '电商网站全栈选型', progress: 60, status: '进行中', action: '继续学习' },
-  { title: 'AI 产品经理基本功', progress: 80, status: '快完成了', action: '继续学习' },
-  { title: 'Prompt 提示词工程', progress: 100, status: '已完成', action: '查看证书' }
-])
-
-// 最近浏览数据 - 匹配原型
-const recentPosts = ref([
-  {
-    title: 'API 就像餐厅服务员：三分钟读懂...',
-    image: 'https://picsum.photos/seed/api1/100/100',
-    time: '浏览于 2026-05-03'
-  },
-  {
-    title: '2026年全栈开发选型：别用 WordPress...',
-    image: 'https://picsum.photos/seed/wp2/100/100',
-    time: '浏览于 2026-05-02'
-  },
-  {
-    title: 'React vs Vue：2026年该选哪一个？',
-    image: 'https://picsum.photos/seed/rv3/100/100',
-    time: '浏览于 2026-05-01'
+// 页面加载时从 API 获取数据
+onMounted(async () => {
+  try {
+    await Promise.all([
+      knowledgeStore.loadStats(),
+      knowledgeStore.loadRecentViews(),
+      pathStore.loadProgress()
+    ])
+  } catch (error) {
+    console.error('加载知识库数据失败，使用本地数据:', error)
   }
-])
+
+  // 如果API数据为空，使用本地数据回退
+  if (!knowledgeStore.stats || (knowledgeStore.stats.favorites === 0 && knowledgeStore.stats.paths === 0)) {
+    const localStats = getLocalKnowledgeStats()
+    knowledgeStore.stats = localStats
+  }
+
+  if (!pathStore.progressList || pathStore.progressList.length === 0) {
+    pathStore.progressList = getLocalProgress()
+  }
+
+  // 设置本地最近浏览数据作为回退
+  if (!knowledgeStore.recentViews || knowledgeStore.recentViews.length === 0) {
+    knowledgeStore.recentViews = [
+      { id: 1, title: 'API 就像餐厅服务员', image: 'https://picsum.photos/seed/api1/100/100', time: '5分钟前' },
+      { id: 2, title: 'React vs Vue 对比', image: 'https://picsum.photos/seed/rv3/100/100', time: '1小时前' },
+      { id: 3, title: '电商网站选型指南', image: 'https://picsum.photos/seed/ec5/100/100', time: '3小时前' }
+    ]
+  }
+})
 
 const goToFavorites = () => router.push('/favorites')
 const goToPaths = () => router.push('/path-list')
-const goToDetail = () => router.push('/card-detail')
+const goToDetail = () => router.push('/card-detail/1')
 </script>
 
 <style scoped>

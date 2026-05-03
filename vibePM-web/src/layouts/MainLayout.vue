@@ -77,8 +77,8 @@ const switchTab = (tab) => {
 }
 
 const handleAddClick = () => {
-  // 可以跳转到发布页面或显示弹窗
-  console.log('点击了添加按钮')
+  // 跳转到搜索页面，方便用户快速查找学习内容
+  router.push('/search')
 }
 </script>
 

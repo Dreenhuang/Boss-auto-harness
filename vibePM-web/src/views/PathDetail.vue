@@ -7,19 +7,19 @@
     </div>
     
     <div class="pathdetail-content">
-      <div class="path-banner" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+      <div class="path-banner" :style="{ background: pathBannerGradient }">
         <Map class="banner-icon" />
-        <h2 class="banner-title">电商网站全栈选型</h2>
-        <p class="banner-desc">从前端到后端到数据库，完整的电商技术选型路径</p>
+        <h2 class="banner-title">{{ pathTitle }}</h2>
+        <p class="banner-desc">{{ pathDesc }}</p>
       </div>
       
       <div class="path-progress-section">
         <div class="progress-header">
           <span class="progress-text">学习进度</span>
-          <span class="progress-percent">3/8 已完成</span>
+          <span class="progress-percent">{{ completedSteps }}/{{ totalSteps }} 已完成</span>
         </div>
         <div class="progress-bar">
-          <div class="progress-fill" style="width: 37%;"></div>
+          <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
       </div>
       
@@ -52,22 +52,61 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ChevronLeft, Share2, Map, Check } from 'lucide-vue-next'
+import { usePathStore } from '../stores/pathStore.js'
+import { getLocalProgress } from '../services/localData.js'
 
 const router = useRouter()
+const route = useRoute()
+const pathStore = usePathStore()
 
-const steps = ref([
-  { title: '需求分析', desc: '明确电商网站的功能需求', tags: ['需求', '分析'], completed: true, current: false },
-  { title: '前端技术选型', desc: '选择合适的前端框架', tags: ['React', 'Vue'], completed: true, current: false },
-  { title: '后端技术选型', desc: '选择合适的后端框架', tags: ['Node.js', 'Python'], completed: true, current: false },
-  { title: '数据库选型', desc: '选择合适的数据库方案', tags: ['MySQL', 'MongoDB'], completed: false, current: true },
-  { title: '支付集成', desc: '集成支付宝、微信支付', tags: ['支付', 'API'], completed: false, current: false },
-  { title: '部署上线', desc: '服务器部署和域名配置', tags: ['部署', '运维'], completed: false, current: false },
-  { title: '性能优化', desc: '网站性能调优', tags: ['性能', '优化'], completed: false, current: false },
-  { title: '数据分析', desc: '集成数据统计和分析', tags: ['数据', '分析'], completed: false, current: false }
-])
+const GRADIENTS = [
+  'linear-gradient(135deg, #6366f1, #8b5cf6)',
+  'linear-gradient(135deg, #06b6d4, #0ea5e9)',
+  'linear-gradient(135deg, #10b981, #059669)',
+  'linear-gradient(135deg, #f59e0b, #d97706)',
+  'linear-gradient(135deg, #ef4444, #dc2626)'
+]
+
+// 默认步骤数据（本地回退）
+const defaultSteps = [
+  { title: '了解电商技术栈', desc: '认识前端、后端、数据库的基本概念', tags: ['入门', '概念'], completed: true, current: false },
+  { title: '前端框架选型', desc: 'React vs Vue vs Next.js 对比分析', tags: ['前端', '选型'], completed: true, current: false },
+  { title: '后端技术选型', desc: 'Node.js vs Python vs Java 适用场景', tags: ['后端', '选型'], completed: true, current: false },
+  { title: '数据库选型', desc: 'MySQL vs MongoDB vs PostgreSQL 对比', tags: ['数据库', '选型'], completed: false, current: true },
+  { title: '部署方案', desc: 'Docker + 云服务部署最佳实践', tags: ['部署', 'DevOps'], completed: false, current: false },
+  { title: '安全与性能', desc: 'HTTPS、CDN、缓存策略', tags: ['安全', '性能'], completed: false, current: false },
+  { title: '支付集成', desc: 'Stripe、支付宝、微信支付接入', tags: ['支付', '集成'], completed: false, current: false },
+  { title: '上线与运维', desc: '监控、日志、自动化运维', tags: ['运维', '上线'], completed: false, current: false }
+]
+
+onMounted(async () => {
+  const id = route.params.id
+  if (id) {
+    try {
+      await pathStore.loadPathDetail(id)
+    } catch (error) {
+      console.error('加载路径详情失败:', error)
+    }
+  }
+})
+
+const pathTitle = computed(() => pathStore.currentPath?.title || '电商网站全栈选型')
+const pathDesc = computed(() => pathStore.currentPath?.description || pathStore.currentPath?.desc || '从前端到后端到数据库，完整的电商技术选型路径')
+const pathBannerGradient = computed(() => pathStore.currentPath?.gradient || GRADIENTS[0])
+
+const steps = computed(() => {
+  if (pathStore.currentPath && pathStore.currentPath.steps && pathStore.currentPath.steps.length > 0) {
+    return pathStore.currentPath.steps
+  }
+  return defaultSteps
+})
+
+const completedSteps = computed(() => steps.value.filter(s => s.completed).length)
+const totalSteps = computed(() => steps.value.length)
+const progressPercent = computed(() => totalSteps.value > 0 ? Math.round((completedSteps.value / totalSteps.value) * 100) : 0)
 
 const goBack = () => router.back()
 </script>

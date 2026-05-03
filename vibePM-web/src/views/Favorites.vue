@@ -7,8 +7,8 @@
     </div>
     
     <div class="favorites-content">
-      <div class="favorites-list">
-        <div class="fav-item" v-for="(item, index) in favorites" :key="index">
+      <div class="favorites-list" v-if="mappedFavorites.length > 0">
+        <div class="fav-item" v-for="(item, index) in mappedFavorites" :key="item.id || index">
           <div class="fav-type-icon" :style="{ background: item.iconBg }">
             <component :is="item.iconComponent" class="icon" :style="{ color: item.iconColor }" />
           </div>
@@ -23,26 +23,85 @@
           <X class="remove-btn" @click="removeFav(index)" />
         </div>
       </div>
+      
+      <!-- 空状态 -->
+      <div v-else class="empty-state">
+        <Icon icon="ri:heart-3-line" class="empty-icon" />
+        <p class="empty-text">还没有收藏内容</p>
+        <p class="empty-hint">浏览卡片时点击收藏按钮即可添加</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ChevronLeft, X, Lightbulb, Target, Wrench, AlertTriangle } from 'lucide-vue-next'
+import { Icon } from '@iconify/vue'
+import { useFavoriteStore } from '../stores/favoriteStore.js'
+import { storeToRefs } from 'pinia'
 
 const router = useRouter()
+const favoriteStore = useFavoriteStore()
+const { favorites, loading, hasMore } = storeToRefs(favoriteStore)
 
-const favorites = ref([
-  { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1', title: 'API就像餐厅服务员', desc: '用生活化比喻解释API', type: '概念卡', date: '2026-05-02' },
-  { iconComponent: Target, iconBg: 'rgba(6, 182, 212, 0.1)', iconColor: '#06b6d4', title: '电商网站选型指南', desc: '从零开始做电商网站', type: '场景卡', date: '2026-05-01' },
-  { iconComponent: Wrench, iconBg: 'rgba(16, 185, 129, 0.1)', iconColor: '#10b981', title: 'AI工具入门', desc: 'ChatGPT、Claude对比', type: '工具卡', date: '2026-04-30' },
-  { iconComponent: AlertTriangle, iconBg: 'rgba(245, 158, 11, 0.1)', iconColor: '#f59e0b', title: '别用WordPress做电商', desc: 'WordPress电商避坑', type: '避坑卡', date: '2026-04-28' }
-])
+// 图标映射：根据API返回的type字段匹配对应图标
+const iconMap = {
+  concept: { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1' },
+  scenario: { iconComponent: Target, iconBg: 'rgba(6, 182, 212, 0.1)', iconColor: '#06b6d4' },
+  tool: { iconComponent: Wrench, iconBg: 'rgba(16, 185, 129, 0.1)', iconColor: '#10b981' },
+  warning: { iconComponent: AlertTriangle, iconBg: 'rgba(245, 158, 11, 0.1)', iconColor: '#f59e0b' },
+  default: { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1' }
+}
+
+function mapFavItem(item) {
+  const iconInfo = iconMap[item.type || item.category] || iconMap.default
+  return {
+    ...item,
+    iconComponent: iconInfo.iconComponent,
+    iconBg: iconInfo.iconBg,
+    iconColor: iconInfo.iconColor
+  }
+}
+
+// 本地默认收藏数据
+const localFavorites = [
+  { id: 'lf1', title: 'API 就像餐厅服务员', desc: '三分钟读懂接口原理', type: 'concept', date: '2026-05-01' },
+  { id: 'lf2', title: '电商网站全栈选型', desc: '从WordPress到Next.js的选型之路', type: 'scenario', date: '2026-04-30' },
+  { id: 'lf3', title: 'React vs Vue 对比', desc: '2026年该选哪一个？', type: 'tool', date: '2026-04-29' },
+  { id: 'lf4', title: '别用WordPress做电商', desc: '性能瓶颈和扩展困难的真实案例', type: 'warning', date: '2026-04-28' }
+]
+
+const mappedFavorites = computed(() => {
+  if (favorites.value.length > 0) {
+    return favorites.value.map(mapFavItem)
+  }
+  // API数据为空时使用本地数据
+  return localFavorites.map(mapFavItem)
+})
+
+onMounted(async () => {
+  try {
+    await favoriteStore.loadFavorites(true)
+  } catch (error) {
+    console.error('加载收藏失败:', error)
+  }
+})
 
 const goBack = () => router.back()
-const removeFav = (index) => favorites.value.splice(index, 1)
+const removeFav = (index) => {
+  const item = favorites.value.length > 0 ? favorites.value[index] : localFavorites[index]
+  if (item && item.id && favorites.value.length > 0) {
+    favoriteStore.removeFavorite(item.id)
+  }
+}
+
+const onLoadMore = () => {
+  if (hasMore.value && !loading.value) {
+    favoriteStore.loadFavorites()
+  }
+}
 </script>
 
 <style scoped>
@@ -145,5 +204,31 @@ const removeFav = (index) => favorites.value.splice(index, 1)
   height: 18px;
   color: #cccccc;
   cursor: pointer;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 0;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: #E5E5E5;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 16px;
+  color: #999999;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.empty-hint {
+  font-size: 12px;
+  color: #CCCCCC;
 }
 </style>
