@@ -1,0 +1,120 @@
+{
+	"pages": [
+		{
+			"path": "pages/splash/splash",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/guide/guide",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/questionnaire/questionnaire",
+			"style": {
+				"navigationBarTitleText": "新手问卷",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/home/home",
+			"style": {
+				"navigationBarTitleText": "首页",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/card-detail/card-detail",
+			"style": {
+				"navigationBarTitleText": "卡片详情",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/search/search",
+			"style": {
+				"navigationBarTitleText": "搜索",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/knowledge-base/knowledge-base",
+			"style": {
+				"navigationBarTitleText": "我的知识库",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/favorites/favorites",
+			"style": {
+				"navigationBarTitleText": "收藏夹",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/path-list/path-list",
+			"style": {
+				"navigationBarTitleText": "学习路径",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/path-detail/path-detail",
+			"style": {
+				"navigationBarTitleText": "路径详情",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/tour/tour",
+			"style": {
+				"navigationBarTitleText": "导出笔记",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/profile/profile",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"navigationStyle": "custom"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "AI学习助手",
+		"navigationBarBackgroundColor": "#ffffff",
+		"backgroundColor": "#fafafa"
+	},
+	"tabBar": {
+		"color": "#999999",
+		"selectedColor": "#6366f1",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"list": [
+			{
+				"pagePath": "pages/home/home",
+				"text": "首页",
+				"iconPath": "static/tab/home.png",
+				"selectedIconPath": "static/tab/home-active.png"
+			},
+			{
+				"pagePath": "pages/knowledge-base/knowledge-base",
+				"text": "知识库",
+				"iconPath": "static/tab/learn.png",
+				"selectedIconPath": "static/tab/learn-active.png"
+			},
+			{
+				"pagePath": "pages/profile/profile",
+				"text": "我的",
+				"iconPath": "static/tab/profile.png",
+				"selectedIconPath": "static/tab/profile-active.png"
+			}
+		]
+	}
+}

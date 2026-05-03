@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #fafafa;
+  color: #1a1a1a;
+  overflow: hidden;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  max-width: 428px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+/* 滚动条隐藏 */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* 移动端安全区域 */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 卡片阴影 */
+.card-shadow {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 瀑布流动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+/* 页面转场 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.3s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateX(-100%);
+}
