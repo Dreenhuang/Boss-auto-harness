@@ -68,10 +68,10 @@ const post = computed(() => postStore.currentPost)
 
 const bannerGradient = computed(() => {
   const gradients = {
-    concept: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    concept: 'linear-gradient(135deg, #FF2442, #FF4D6A)',
     practice: 'linear-gradient(135deg, #f59e0b, #ef4444)',
     tech: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
-    ai: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+    ai: 'linear-gradient(135deg, #FF4D6A, #ec4899)',
     guide: 'linear-gradient(135deg, #10b981, #06b6d4)'
   }
   return gradients[post.value?.type] || gradients.concept
@@ -90,10 +90,10 @@ const bannerIcon = computed(() => {
 
 const typeTagStyle = computed(() => {
   const styles = {
-    concept: { background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' },
+    concept: { background: 'rgba(255, 36, 66, 0.1)', color: '#FF2442' },
     practice: { background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' },
     tech: { background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' },
-    ai: { background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' },
+    ai: { background: 'rgba(255, 77, 106, 0.1)', color: '#FF4D6A' },
     guide: { background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }
   }
   return styles[post.value?.type] || styles.concept
@@ -348,8 +348,8 @@ const handleExport = async () => {
 }
 
 .highlight-box {
-  background: rgba(99, 102, 241, 0.05);
-  border-left: 4px solid #6366f1;
+  background: rgba(255, 36, 66, 0.05);
+  border-left: 4px solid #FF2442;
   padding: 12px;
   border-radius: 0 8px 8px 0;
   margin-top: 16px;

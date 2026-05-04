@@ -98,6 +98,6 @@ onMounted(() => {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
+  background: linear-gradient(90deg, #FF2442, #FF4D6A, #ff6b8a);
 }
 </style>

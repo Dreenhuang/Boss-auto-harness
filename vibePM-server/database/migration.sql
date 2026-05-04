@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   phone VARCHAR(20) UNIQUE,
+  password TEXT DEFAULT '',
   nickname VARCHAR(50) DEFAULT '学习者',
   avatar TEXT DEFAULT '',
   level VARCHAR(20) DEFAULT '新手',

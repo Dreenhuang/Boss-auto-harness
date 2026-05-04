@@ -227,8 +227,8 @@ const startLearning = () => {
 }
 
 .option-card.selected {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #FF2442;
+  background: rgba(255, 36, 66, 0.05);
 }
 
 .option-icon {
@@ -246,11 +246,11 @@ const startLearning = () => {
   height: 20px;
 }
 
-.tech-icon { background: rgba(99, 102, 241, 0.1); }
-.tech-icon .icon { color: #6366f1; }
+.tech-icon { background: rgba(255, 36, 66, 0.1); }
+.tech-icon .icon { color: #FF2442; }
 
-.thinking-icon { background: rgba(139, 92, 246, 0.1); }
-.thinking-icon .icon { color: #8b5cf6; }
+.thinking-icon { background: rgba(255, 77, 106, 0.1); }
+.thinking-icon .icon { color: #FF4D6A; }
 
 .practice-icon { background: rgba(16, 185, 129, 0.1); }
 .practice-icon .icon { color: #10b981; }
@@ -302,8 +302,8 @@ const startLearning = () => {
 }
 
 .radio.checked {
-  border-color: #6366f1;
-  background: #6366f1;
+  border-color: #FF2442;
+  background: #FF2442;
 }
 
 .level-text {
@@ -328,7 +328,7 @@ const startLearning = () => {
 
 .bottom-btn {
   height: 56px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #FF2442, #FF4D6A);
   display: flex;
   align-items: center;
   justify-content: center;

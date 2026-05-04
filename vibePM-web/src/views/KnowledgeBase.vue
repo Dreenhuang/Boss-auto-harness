@@ -28,7 +28,7 @@
       <!-- 学习进度区域 -->
       <div class="section-header">
         <h2 class="section-title">学习进度</h2>
-        <span class="manage-link">管理全部</span>
+        <span class="manage-link" @click="goToPaths">管理全部</span>
       </div>
 
       <!-- 进度列表 - 匹配原型 -->

@@ -61,10 +61,10 @@ const history = ref(['API是什么', 'React vs Vue', '电商网站选型'])
 
 // 图标映射：根据API返回的type/category字段匹配对应图标
 const iconMap = {
-  concept: { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1' },
+  concept: { iconComponent: Lightbulb, iconBg: 'rgba(255, 36, 66, 0.1)', iconColor: '#FF2442' },
   tool: { iconComponent: Wrench, iconBg: 'rgba(16, 185, 129, 0.1)', iconColor: '#10b981' },
   warning: { iconComponent: AlertTriangle, iconBg: 'rgba(245, 158, 11, 0.1)', iconColor: '#f59e0b' },
-  default: { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1' }
+  default: { iconComponent: Lightbulb, iconBg: 'rgba(255, 36, 66, 0.1)', iconColor: '#FF2442' }
 }
 
 function mapResultItem(item) {

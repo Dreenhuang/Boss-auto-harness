@@ -190,15 +190,15 @@ onUnmounted(() => {
 }
 
 .icon-blue {
-  color: #6366f1;
+  color: #FF2442;
 }
 
 .icon-purple {
-  color: #8b5cf6;
+  color: #FF4D6A;
 }
 
 .icon-pink {
-  color: #a855f7;
+  color: #ff6b8a;
 }
 
 .page-title {
@@ -259,6 +259,6 @@ onUnmounted(() => {
 }
 
 .start-btn {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #FF2442, #FF4D6A);
 }
 </style>

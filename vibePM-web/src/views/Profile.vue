@@ -9,7 +9,7 @@
           <h2 class="username">{{ username }}</h2>
           <p class="user-level">{{ userLevel }}</p>
         </div>
-        <Settings class="settings-icon" />
+        <Settings class="settings-icon" @click="goToSettings" />
       </div>
     </div>
     
@@ -32,8 +32,8 @@
     
     <div class="menu-section">
       <div class="menu-item" @click="goToFavorites">
-        <div class="menu-icon" style="background: rgba(99, 102, 241, 0.1);">
-          <Heart class="icon" style="color: #6366f1;" />
+        <div class="menu-icon" style="background: rgba(255, 36, 66, 0.1);">
+          <Heart class="icon" style="color: #FF2442;" />
         </div>
         <span class="menu-text">我的收藏</span>
         <ChevronRight class="menu-arrow" />
@@ -52,14 +52,14 @@
         <span class="menu-text">导出笔记</span>
         <ChevronRight class="menu-arrow" />
       </div>
-      <div class="menu-item">
+      <div class="menu-item" @click="goToMessage">
         <div class="menu-icon" style="background: rgba(236, 72, 153, 0.1);">
           <Bell class="icon" style="color: #ec4899;" />
         </div>
         <span class="menu-text">消息通知</span>
         <ChevronRight class="menu-arrow" />
       </div>
-      <div class="menu-item">
+      <div class="menu-item" @click="goToHelp">
         <div class="menu-icon" style="background: rgba(6, 182, 212, 0.1);">
           <HelpCircle class="icon" style="color: #06b6d4;" />
         </div>
@@ -104,6 +104,13 @@ onMounted(async () => {
 const goToFavorites = () => router.push('/favorites')
 const goToPathList = () => router.push('/path-list')
 const goToExport = () => router.push('/export')
+const goToSettings = () => {
+  alert('设置功能即将上线，敬请期待！')
+}
+const goToMessage = () => router.push('/message')
+const goToHelp = () => {
+  alert('帮助中心即将上线，敬请期待！')
+}
 
 const handleLogout = async () => {
   userStore.logout()
@@ -134,7 +141,7 @@ const handleLogout = async () => {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #FF2442, #FF4D6A);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -63,7 +63,7 @@ const route = useRoute()
 const pathStore = usePathStore()
 
 const GRADIENTS = [
-  'linear-gradient(135deg, #6366f1, #8b5cf6)',
+  'linear-gradient(135deg, #FF2442, #FF4D6A)',
   'linear-gradient(135deg, #06b6d4, #0ea5e9)',
   'linear-gradient(135deg, #10b981, #059669)',
   'linear-gradient(135deg, #f59e0b, #d97706)',
@@ -206,7 +206,7 @@ const goBack = () => router.back()
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  background: linear-gradient(90deg, #FF2442, #FF4D6A);
   border-radius: 4px;
 }
 
@@ -246,7 +246,7 @@ const goBack = () => router.back()
 }
 
 .step-dot.current {
-  background: #6366f1;
+  background: #FF2442;
   color: #ffffff;
 }
 
@@ -300,7 +300,7 @@ const goBack = () => router.back()
 
 .continue-btn {
   height: 44px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #FF2442, #FF4D6A);
   border-radius: 22px;
   display: flex;
   align-items: center;

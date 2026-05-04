@@ -13,42 +13,77 @@
         <p class="app-slogan">让技术学习不再困难</p>
       </div>
 
-      <div class="login-form" v-if="!isGuestMode">
+      <div class="tab-switch">
+        <div
+          class="tab-item"
+          :class="{ active: mode === 'login' }"
+          @click="mode = 'login'"
+        >
+          登录
+        </div>
+        <div
+          class="tab-item"
+          :class="{ active: mode === 'register' }"
+          @click="mode = 'register'"
+        >
+          注册
+        </div>
+      </div>
+
+      <div class="login-form">
         <div class="input-group">
           <Icon icon="ri:phone-line" class="input-icon" />
-          <input 
-            type="tel" 
-            v-model="phone" 
-            placeholder="请输入手机号" 
+          <input
+            type="tel"
+            v-model="phone"
+            placeholder="请输入手机号"
             maxlength="11"
             class="input-field"
           />
         </div>
 
         <div class="input-group">
-          <Icon icon="ri:shield-keyhole-line" class="input-icon" />
-          <input 
-            type="text" 
-            v-model="code" 
-            placeholder="验证码" 
-            maxlength="6"
-            class="input-field code-input"
+          <Icon icon="ri:lock-line" class="input-icon" />
+          <input
+            :type="showPassword ? 'text' : 'password'"
+            v-model="password"
+            placeholder="请输入密码"
+            class="input-field"
           />
-          <button 
-            class="code-btn" 
-            :disabled="countdown > 0 || !isPhoneValid"
-            @click="sendVerifyCode"
-          >
-            {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-          </button>
+          <Icon
+            :icon="showPassword ? 'ri:eye-off-line' : 'ri:eye-line'"
+            class="input-icon toggle-pwd"
+            @click="showPassword = !showPassword"
+          />
         </div>
 
-        <button 
-          class="login-btn" 
-          :disabled="!canLogin || logging"
-          @click="handleLogin"
+        <div class="input-group" v-if="mode === 'register'">
+          <Icon icon="ri:lock-line" class="input-icon" />
+          <input
+            :type="showConfirmPassword ? 'text' : 'password'"
+            v-model="confirmPassword"
+            placeholder="请确认密码"
+            class="input-field"
+          />
+          <Icon
+            :icon="showConfirmPassword ? 'ri:eye-off-line' : 'ri:eye-line'"
+            class="input-icon toggle-pwd"
+            @click="showConfirmPassword = !showConfirmPassword"
+          />
+        </div>
+
+        <p class="password-hint" v-if="mode === 'register'">
+          密码至少8位，必须包含字母和数字
+        </p>
+
+        <p class="error-msg" v-if="errorMsg">{{ errorMsg }}</p>
+
+        <button
+          class="login-btn"
+          :disabled="!canSubmit || submitting"
+          @click="handleSubmit"
         >
-          {{ logging ? '登录中...' : '登录' }}
+          {{ submitting ? (mode === 'login' ? '登录中...' : '注册中...') : (mode === 'login' ? '登录' : '注册') }}
         </button>
       </div>
 
@@ -56,16 +91,16 @@
         <div class="divider">
           <span class="divider-text">或者</span>
         </div>
-        <button class="guest-btn" @click="handleGuestLogin" :disabled="logging">
+        <button class="guest-btn" @click="handleGuestLogin" :disabled="submitting">
           <Icon icon="ri:user-line" class="guest-icon" />
           游客模式体验
         </button>
       </div>
 
       <div class="agreement">
-        <Icon 
-          :icon="agreed ? 'ri:checkbox-circle-fill' : 'ri:checkbox-blank-circle-line'" 
-          class="agree-icon" 
+        <Icon
+          :icon="agreed ? 'ri:checkbox-circle-fill' : 'ri:checkbox-blank-circle-line'"
+          class="agree-icon"
           :class="{ agreed }"
           @click="agreed = !agreed"
         />
@@ -86,53 +121,76 @@ import { useUserStore } from '../stores/userStore.js'
 const router = useRouter()
 const userStore = useUserStore()
 
+const mode = ref('login')
 const phone = ref('')
-const code = ref('')
-const countdown = ref(0)
-const logging = ref(false)
+const password = ref('')
+const confirmPassword = ref('')
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
+const submitting = ref(false)
 const agreed = ref(false)
-const isGuestMode = ref(false)
+const errorMsg = ref('')
 
 const isPhoneValid = computed(() => /^1\d{10}$/.test(phone.value))
-const canLogin = computed(() => isPhoneValid.value && code.value.length === 6 && agreed.value)
+const isPasswordValid = computed(() => {
+  if (!password.value || password.value.length < 8) return false
+  const hasLetter = /[a-zA-Z]/.test(password.value)
+  const hasNumber = /\d/.test(password.value)
+  return hasLetter && hasNumber
+})
+const isConfirmValid = computed(() => {
+  if (mode.value === 'login') return true
+  return password.value === confirmPassword.value && confirmPassword.value.length > 0
+})
 
-let countdownTimer = null
+const canSubmit = computed(() => {
+  if (!isPhoneValid.value || !isPasswordValid.value || !agreed.value) return false
+  if (mode.value === 'register' && !isConfirmValid.value) return false
+  return true
+})
 
-const sendVerifyCode = async () => {
-  if (!isPhoneValid.value || countdown.value > 0) return
-  const result = await userStore.login(phone.value, '000000')
-  if (result?.code === 200) {
-    countdown.value = 60
-    countdownTimer = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) clearInterval(countdownTimer)
-    }, 1000)
-  }
-}
+const handleSubmit = async () => {
+  if (!canSubmit.value || submitting.value) return
+  errorMsg.value = ''
+  submitting.value = true
 
-const handleLogin = async () => {
-  if (!canLogin.value || logging.value) return
-  logging.value = true
   try {
-    const result = await userStore.login(phone.value, code.value)
-    if (result?.code === 200) {
-      router.replace('/main')
+    if (mode.value === 'register') {
+      if (password.value !== confirmPassword.value) {
+        errorMsg.value = '两次输入的密码不一致'
+        return
+      }
+      const result = await userStore.register(phone.value, password.value)
+      if (result?.code === 200) {
+        router.replace('/main')
+      } else {
+        errorMsg.value = result?.message || '注册失败，请重试'
+      }
+    } else {
+      const result = await userStore.login(phone.value, password.value)
+      if (result?.code === 200) {
+        router.replace('/main')
+      } else {
+        errorMsg.value = result?.message || '登录失败，请重试'
+      }
     }
+  } catch (err) {
+    errorMsg.value = '网络异常，请稍后重试'
   } finally {
-    logging.value = false
+    submitting.value = false
   }
 }
 
 const handleGuestLogin = async () => {
-  if (logging.value) return
-  logging.value = true
+  if (submitting.value) return
+  submitting.value = true
   try {
     const result = await userStore.guestLogin()
     if (result?.code === 200) {
       router.replace('/main')
     }
   } finally {
-    logging.value = false
+    submitting.value = false
   }
 }
 
@@ -159,20 +217,20 @@ const goBack = () => router.back()
 
 .login-body {
   flex: 1;
-  padding: 40px 32px;
+  padding: 24px 32px;
   display: flex;
   flex-direction: column;
 }
 
 .logo-area {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 32px;
 }
 
 .logo-icon {
   width: 72px;
   height: 72px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #FF2442, #FF4D6A);
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -197,10 +255,36 @@ const goBack = () => router.back()
   color: #999999;
 }
 
+.tab-switch {
+  display: flex;
+  background: #F5F5F5;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #999999;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.tab-item.active {
+  background: #ffffff;
+  color: #FF2442;
+  box-shadow: 0 2px 8px rgba(255, 36, 66, 0.15);
+}
+
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .input-group {
@@ -219,6 +303,15 @@ const goBack = () => router.back()
   flex-shrink: 0;
 }
 
+.toggle-pwd {
+  cursor: pointer;
+  color: #BBBBBB;
+}
+
+.toggle-pwd:hover {
+  color: #FF2442;
+}
+
 .input-field {
   flex: 1;
   border: none;
@@ -232,30 +325,21 @@ const goBack = () => router.back()
   color: #CCCCCC;
 }
 
-.code-input {
-  flex: 1;
+.password-hint {
+  font-size: 12px;
+  color: #AAAAAA;
+  margin: -4px 0 0 4px;
 }
 
-.code-btn {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  color: #6366f1;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  padding: 4px 0;
-}
-
-.code-btn:disabled {
-  color: #CCCCCC;
-  cursor: not-allowed;
+.error-msg {
+  font-size: 13px;
+  color: #EF4444;
+  margin: -2px 0 0 4px;
 }
 
 .login-btn {
   height: 48px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #FF2442, #FF4D6A);
   border: none;
   border-radius: 12px;
   color: #ffffff;
@@ -263,7 +347,7 @@ const goBack = () => router.back()
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .login-btn:active {
@@ -277,7 +361,7 @@ const goBack = () => router.back()
 }
 
 .guest-section {
-  margin-top: 32px;
+  margin-top: 28px;
 }
 
 .divider {
@@ -329,7 +413,7 @@ const goBack = () => router.back()
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin-top: 32px;
+  margin-top: 28px;
 }
 
 .agree-icon {
@@ -341,7 +425,7 @@ const goBack = () => router.back()
 }
 
 .agree-icon.agreed {
-  color: #6366f1;
+  color: #FF2442;
 }
 
 .agree-text {
@@ -351,7 +435,7 @@ const goBack = () => router.back()
 }
 
 .agree-text a {
-  color: #6366f1;
+  color: #FF2442;
   text-decoration: none;
 }
 </style>

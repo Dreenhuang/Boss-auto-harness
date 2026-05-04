@@ -38,12 +38,12 @@ const router = useRouter()
 const pathStore = usePathStore()
 
 const GRADIENTS = [
-  'linear-gradient(135deg, #6366f1, #8b5cf6)',
+  'linear-gradient(135deg, #FF2442, #FF4D6A)',
   'linear-gradient(135deg, #06b6d4, #0ea5e9)',
   'linear-gradient(135deg, #10b981, #059669)',
   'linear-gradient(135deg, #f59e0b, #d97706)',
   'linear-gradient(135deg, #ef4444, #dc2626)',
-  'linear-gradient(135deg, #8b5cf6, #6366f1)'
+  'linear-gradient(135deg, #FF4D6A, #FF2442)'
 ]
 
 const ICONS = [
@@ -184,7 +184,7 @@ const goToDetail = async (path) => {
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  background: linear-gradient(90deg, #FF2442, #FF4D6A);
   border-radius: 3px;
   transition: width 0.3s ease;
 }

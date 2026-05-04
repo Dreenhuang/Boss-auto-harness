@@ -5,7 +5,7 @@
       <h1 class="header-title">消息</h1>
       <div class="header-actions">
         <span class="clear-btn" @click="messageStore.clearAllUnread()">清除未读</span>
-        <Icon icon="ri:settings-4-line" class="settings-icon" />
+        <Icon icon="ri:settings-4-line" class="settings-icon" @click="goToMessageSettings" />
       </div>
     </div>
 
@@ -119,6 +119,10 @@ onMounted(async () => {
 const handleQuickAction = (id) => {
   // 快捷操作统一切换到"互动"tab，因为点赞、关注、评论都属于互动
   messageStore.switchTab('interaction')
+}
+
+const goToMessageSettings = () => {
+  alert('消息设置功能即将上线，敬请期待！')
 }
 </script>
 

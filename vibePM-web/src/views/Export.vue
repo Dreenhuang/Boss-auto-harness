@@ -11,8 +11,8 @@
         <h3 class="section-title">选择导出内容</h3>
         <div class="export-options">
           <div class="export-option" :class="{ selected: selectedType === 'favorites' }" @click="selectedType = 'favorites'">
-            <div class="option-icon" style="background: rgba(99, 102, 241, 0.1);">
-              <Heart class="icon" style="color: #6366f1;" />
+            <div class="option-icon" style="background: rgba(255, 36, 66, 0.1);">
+              <Heart class="icon" style="color: #FF2442;" />
             </div>
             <div class="option-info">
               <span class="option-title">我的收藏</span>
@@ -218,8 +218,8 @@ const handleExport = async () => {
 }
 
 .export-option.selected {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #FF2442;
+  background: rgba(255, 36, 66, 0.05);
 }
 
 .option-icon {
@@ -263,8 +263,8 @@ const handleExport = async () => {
 }
 
 .radio.checked {
-  border-color: #6366f1;
-  background: #6366f1;
+  border-color: #FF2442;
+  background: #FF2442;
 }
 
 .format-options {
@@ -284,8 +284,8 @@ const handleExport = async () => {
 }
 
 .format-option.selected {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #FF2442;
+  background: rgba(255, 36, 66, 0.05);
 }
 
 .format-icon {
@@ -325,7 +325,7 @@ const handleExport = async () => {
 
 .export-btn {
   height: 44px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #FF2442, #FF4D6A);
   border-radius: 22px;
   display: flex;
   align-items: center;

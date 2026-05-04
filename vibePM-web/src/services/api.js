@@ -80,8 +80,8 @@ export const messageApi = {
 }
 
 export const authApi = {
-  sendCode: (phone) => request('/auth/send-code', { method: 'POST', body: JSON.stringify({ phone }) }),
-  login: (phone, code) => request('/auth/login', { method: 'POST', body: JSON.stringify({ phone, code }) }),
+  register: (phone, password) => request('/auth/register', { method: 'POST', body: JSON.stringify({ phone, password }) }),
+  login: (phone, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ phone, password }) }),
   guestLogin: () => request('/auth/guest', { method: 'POST' })
 }
 

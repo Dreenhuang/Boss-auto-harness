@@ -35,7 +35,7 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ChevronLeft, X, Lightbulb, Target, Wrench, AlertTriangle } from 'lucide-vue-next'
 import { Icon } from '@iconify/vue'
@@ -48,11 +48,11 @@ const { favorites, loading, hasMore } = storeToRefs(favoriteStore)
 
 // 图标映射：根据API返回的type字段匹配对应图标
 const iconMap = {
-  concept: { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1' },
+  concept: { iconComponent: Lightbulb, iconBg: 'rgba(255, 36, 66, 0.1)', iconColor: '#FF2442' },
   scenario: { iconComponent: Target, iconBg: 'rgba(6, 182, 212, 0.1)', iconColor: '#06b6d4' },
   tool: { iconComponent: Wrench, iconBg: 'rgba(16, 185, 129, 0.1)', iconColor: '#10b981' },
   warning: { iconComponent: AlertTriangle, iconBg: 'rgba(245, 158, 11, 0.1)', iconColor: '#f59e0b' },
-  default: { iconComponent: Lightbulb, iconBg: 'rgba(99, 102, 241, 0.1)', iconColor: '#6366f1' }
+  default: { iconComponent: Lightbulb, iconBg: 'rgba(255, 36, 66, 0.1)', iconColor: '#FF2442' }
 }
 
 function mapFavItem(item) {
@@ -66,19 +66,19 @@ function mapFavItem(item) {
 }
 
 // 本地默认收藏数据
-const localFavorites = [
+const localFavorites = ref([
   { id: 'lf1', title: 'API 就像餐厅服务员', desc: '三分钟读懂接口原理', type: 'concept', date: '2026-05-01' },
   { id: 'lf2', title: '电商网站全栈选型', desc: '从WordPress到Next.js的选型之路', type: 'scenario', date: '2026-04-30' },
   { id: 'lf3', title: 'React vs Vue 对比', desc: '2026年该选哪一个？', type: 'tool', date: '2026-04-29' },
   { id: 'lf4', title: '别用WordPress做电商', desc: '性能瓶颈和扩展困难的真实案例', type: 'warning', date: '2026-04-28' }
-]
+])
 
 const mappedFavorites = computed(() => {
   if (favorites.value.length > 0) {
     return favorites.value.map(mapFavItem)
   }
   // API数据为空时使用本地数据
-  return localFavorites.map(mapFavItem)
+  return localFavorites.value.map(mapFavItem)
 })
 
 onMounted(async () => {
@@ -91,9 +91,17 @@ onMounted(async () => {
 
 const goBack = () => router.back()
 const removeFav = (index) => {
-  const item = favorites.value.length > 0 ? favorites.value[index] : localFavorites[index]
-  if (item && item.id && favorites.value.length > 0) {
-    favoriteStore.removeFavorite(item.id)
+  if (favorites.value.length > 0) {
+    // API数据模式：通过store删除
+    const item = favorites.value[index]
+    if (item && item.id) {
+      favoriteStore.removeFavorite(item.id)
+    }
+  } else {
+    // 本地数据模式：直接从localFavorites中删除
+    if (index >= 0 && index < localFavorites.value.length) {
+      localFavorites.value.splice(index, 1)
+    }
   }
 }
 

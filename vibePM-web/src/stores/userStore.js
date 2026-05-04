@@ -7,8 +7,20 @@ export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('vibe-pm-token') || '')
   const isGuest = ref(false)
 
-  async function login(phone, code) {
-    const result = await authApi.login(phone, code)
+  async function login(phone, password) {
+    const result = await authApi.login(phone, password)
+    if (result.code === 200 && result.data) {
+      token.value = result.data.token
+      userInfo.value = result.data.user
+      isGuest.value = false
+      localStorage.setItem('vibe-pm-token', result.data.token)
+      localStorage.setItem('vibe-pm-user', JSON.stringify(result.data.user))
+    }
+    return result
+  }
+
+  async function register(phone, password) {
+    const result = await authApi.register(phone, password)
     if (result.code === 200 && result.data) {
       token.value = result.data.token
       userInfo.value = result.data.user
@@ -74,6 +86,7 @@ export const useUserStore = defineStore('user', () => {
     token,
     isGuest,
     login,
+    register,
     guestLogin,
     loadProfile,
     updateProfile,
