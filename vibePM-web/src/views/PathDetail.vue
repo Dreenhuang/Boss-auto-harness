@@ -44,7 +44,7 @@
     </div>
     
     <div class="pathdetail-footer">
-      <div class="continue-btn">
+      <div class="continue-btn" @click="handleContinueLearning">
         <span class="btn-text">继续学习</span>
       </div>
     </div>
@@ -109,6 +109,24 @@ const totalSteps = computed(() => steps.value.length)
 const progressPercent = computed(() => totalSteps.value > 0 ? Math.round((completedSteps.value / totalSteps.value) * 100) : 0)
 
 const goBack = () => router.back()
+
+const handleContinueLearning = () => {
+  const currentStep = steps.value.find(s => s.current)
+  if (currentStep && currentStep.contentId) {
+    router.push(`/card-detail/${currentStep.contentId}`)
+  } else {
+    const nextStep = steps.value.find(s => !s.completed)
+    if (nextStep && nextStep.contentId) {
+      router.push(`/card-detail/${nextStep.contentId}`)
+    } else {
+      const id = route.params.id
+      const stepIndex = currentStep ? steps.value.indexOf(currentStep) + 1 : 0
+      if (stepIndex < steps.value.length) {
+        router.push(`/card-detail/${id || 1}`)
+      }
+    }
+  }
+}
 </script>
 
 <style scoped>

@@ -188,6 +188,16 @@ const handleGuestLogin = async () => {
     const result = await userStore.guestLogin()
     if (result?.code === 200) {
       router.replace('/main')
+    } else {
+      const localResult = userStore.guestLoginLocal()
+      if (localResult) {
+        router.replace('/main')
+      }
+    }
+  } catch (err) {
+    const localResult = userStore.guestLoginLocal()
+    if (localResult) {
+      router.replace('/main')
     }
   } finally {
     submitting.value = false

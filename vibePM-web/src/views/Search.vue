@@ -10,7 +10,7 @@
     
     <div class="search-content">
       <div v-if="searchQuery" class="search-results">
-        <div class="result-item" v-for="(item, index) in filteredResults" :key="index">
+        <div class="result-item" v-for="(item, index) in filteredResults" :key="index" @click="goToResult(item)">
           <div class="result-icon" :style="{ background: item.iconBg }">
             <component :is="item.iconComponent" class="icon" :style="{ color: item.iconColor }" />
           </div>
@@ -34,7 +34,7 @@
         <div class="hot-section">
           <h3 class="hot-title">热门搜索</h3>
           <div class="hot-list">
-            <div class="hot-item" v-for="(item, index) in hotSearches" :key="index">
+            <div class="hot-item" v-for="(item, index) in hotSearches" :key="index" @click="handleHotSearchClick(item)">
               <span class="hot-rank" :class="{ top3: index < 3 }">{{ index + 1 }}</span>
               <span class="hot-text">{{ item }}</span>
             </div>
@@ -126,6 +126,19 @@ const clearSearch = () => {
   searchResults.value = []
 }
 const clearHistory = () => { history.value = [] }
+
+const handleHotSearchClick = (keyword) => {
+  searchQuery.value = keyword
+  handleSearch()
+}
+
+const goToResult = (item) => {
+  if (item.id) {
+    router.push(`/card-detail/${item.id}`)
+  } else if (item.postId) {
+    router.push(`/card-detail/${item.postId}`)
+  }
+}
 </script>
 
 <style scoped>

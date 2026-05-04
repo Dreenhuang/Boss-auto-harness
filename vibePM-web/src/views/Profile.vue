@@ -3,7 +3,8 @@
     <div class="profile-header">
       <div class="user-info">
         <div class="avatar">
-          <User class="avatar-icon" />
+          <img v-if="userAvatar" :src="userAvatar" alt="avatar" class="avatar-img" />
+          <User v-else class="avatar-icon" />
         </div>
         <div class="user-details">
           <h2 class="username">{{ username }}</h2>
@@ -84,6 +85,7 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const username = computed(() => userStore.userInfo?.nickname || userStore.userInfo?.name || '学习者')
+const userAvatar = computed(() => userStore.userInfo?.avatar || '')
 const userLevel = computed(() => {
   const level = userStore.userInfo?.level || 3
   const days = userStore.userInfo?.studyDays || 0
@@ -104,9 +106,7 @@ onMounted(async () => {
 const goToFavorites = () => router.push('/favorites')
 const goToPathList = () => router.push('/path-list')
 const goToExport = () => router.push('/export')
-const goToSettings = () => {
-  alert('设置功能即将上线，敬请期待！')
-}
+const goToSettings = () => router.push('/settings')
 const goToMessage = () => router.push('/message')
 const goToHelp = () => {
   alert('帮助中心即将上线，敬请期待！')
@@ -152,6 +152,13 @@ const handleLogout = async () => {
   width: 28px;
   height: 28px;
   color: #ffffff;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .user-details {

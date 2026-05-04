@@ -84,6 +84,11 @@ const routes = [
     path: '/export',
     name: 'Export',
     component: () => import('@/views/Export.vue')
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('@/views/Settings.vue')
   }
 ]
 

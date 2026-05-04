@@ -37,6 +37,7 @@
           class="progress-item" 
           v-for="(item, index) in pathStore.progressList" 
           :key="index"
+          @click="goToPathDetail(item.id)"
         >
           <div class="progress-item-header">
             <h3 class="progress-item-title">{{ item.title }}</h3>
@@ -139,6 +140,7 @@ onMounted(async () => {
 const goToFavorites = () => router.push('/favorites')
 const goToPaths = () => router.push('/path-list')
 const goToDetail = () => router.push('/card-detail/1')
+const goToPathDetail = (id) => router.push(`/path-detail/${id}`)
 </script>
 
 <style scoped>

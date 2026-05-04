@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="100" fill="#FFF3E0"/>
+  <ellipse cx="100" cy="95" rx="55" ry="60" fill="#FFCC80"/>
+  <!-- 波浪长发 -->
+  <path d="M40 80 Q30 40 60 30 Q80 20 100 25 Q120 20 140 30 Q170 40 160 80 Q175 120 165 150 L35 150 Q25 120 40 80Z" fill="#D2691E"/>
+  <!-- 刘海 -->
+  <path d="M40 80 Q45 55 65 60 Q80 50 100 55 Q120 50 135 60 Q155 55 160 80 Q140 68 100 68 Q60 68 40 80Z" fill="#D2691E"/>
+  <!-- 眼睛 -->
+  <ellipse cx="78" cy="95" rx="8" ry="10" fill="#333"/>
+  <ellipse cx="122" cy="95" rx="8" ry="10" fill="#333"/>
+  <circle cx="80" cy="92" r="3" fill="white"/>
+  <circle cx="124" cy="92" r="3" fill="white"/>
+  <!-- 眉毛 -->
+  <path d="M68 82 Q78 78 88 82" stroke="#D2691E" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M112 82 Q122 78 132 82" stroke="#D2691E" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- 鼻子 -->
+  <path d="M100 105 Q102 112 98 112" stroke="#D4A574" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- 嘴巴 -->
+  <path d="M85 125 Q100 138 115 125" stroke="#E85D75" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- 腮红 -->
+  <ellipse cx="65" cy="115" rx="12" ry="8" fill="#FFAB91" opacity="0.6"/>
+  <ellipse cx="135" cy="115" rx="12" ry="8" fill="#FFAB91" opacity="0.6"/>
+  <!-- 耳朵 -->
+  <ellipse cx="48" cy="100" rx="8" ry="12" fill="#FFCC80"/>
+  <ellipse cx="152" cy="100" rx="8" ry="12" fill="#FFCC80"/>
+  <!-- 衣服 -->
+  <path d="M45 150 Q100 140 155 150 L165 200 L35 200Z" fill="#FF9800"/>
+  <!-- 项链 -->
+  <path d="M80 150 Q100 170 120 150" stroke="#FFD700" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

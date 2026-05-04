@@ -7,7 +7,7 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 app.use(cors({
-  origin: ['http://localhost:3003', 'http://localhost:5173', 'http://192.168.1.16:3003'],
+  origin: ['http://localhost:3003', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://192.168.1.16:3003'],
   credentials: true
 }))
 app.use(express.json())
@@ -29,6 +29,7 @@ import exportRoutes from './routes/exports.js'
 import knowledgeRoutes from './routes/knowledge.js'
 import aiRoutes from './routes/ai.js'
 import recommendRoutes from './routes/recommend.js'
+import adminRoutes from './routes/admin.js'
 
 app.use('/api/posts', postRoutes)
 app.use('/api/favorites', favoriteRoutes)
@@ -41,6 +42,7 @@ app.use('/api/export', exportRoutes)
 app.use('/api/knowledge', knowledgeRoutes)
 app.use('/api/ai', aiRoutes)
 app.use('/api/recommend', recommendRoutes)
+app.use('/api/admin', adminRoutes)
 
 app.get('/api/health', (req, res) => {
   res.json({ code: 200, message: 'Vibe PM Server is running', data: { version: '1.0.0', timestamp: new Date().toISOString() } })
