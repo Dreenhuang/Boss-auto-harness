@@ -55,6 +55,17 @@ import {
   getPromptByKey
 } from '../controllers/admin/promptManage.js'
 
+import {
+  getAdminPosts,
+  createPost,
+  updatePost,
+  deletePost,
+  auditPost,
+  batchAuditPosts,
+  schedulePost,
+  aiGeneratePosts
+} from '../controllers/admin/postManage.js'
+
 const router = Router()
 
 // 用户管理
@@ -105,5 +116,15 @@ router.get('/prompts/key/:key', getPromptByKey)
 router.post('/prompts', createPrompt)
 router.put('/prompts/:id', updatePrompt)
 router.delete('/prompts/:id', deletePrompt)
+
+// 内容管理（admin）
+router.get('/posts', getAdminPosts)
+router.post('/posts', createPost)
+router.put('/posts/:id', updatePost)
+router.delete('/posts/:id', deletePost)
+router.post('/posts/:id/audit', auditPost)
+router.post('/posts/:id/schedule', schedulePost)
+router.post('/posts/batch-audit', batchAuditPosts)
+router.post('/posts/ai-generate', aiGeneratePosts)
 
 export default router

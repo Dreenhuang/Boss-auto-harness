@@ -66,13 +66,15 @@ export const roleApi = {
 
 // 内容管理 API
 export const contentApi = {
-  getList: (params) => api.get('/contents', { params }),
-  getDetail: (id) => api.get(`/contents/${id}`),
-  create: (data) => api.post('/contents', data),
-  update: (id, data) => api.put(`/contents/${id}`, data),
-  delete: (id) => api.delete(`/contents/${id}`),
-  audit: (id, status) => api.post(`/contents/${id}/audit`, { status }),
-  batchAudit: (ids, status) => api.post('/contents/batch-audit', { ids, status })
+  getList: (params) => api.get('/posts', { params }),
+  getDetail: (id) => api.get(`/posts/${id}`),
+  create: (data) => api.post('/posts', data),
+  update: (id, data) => api.put(`/posts/${id}`, data),
+  delete: (id) => api.delete(`/posts/${id}`),
+  audit: (id, status, reason) => api.post(`/posts/${id}/audit`, { status, reason }),
+  batchAudit: (ids, status) => api.post('/posts/batch-audit', { ids, status }),
+  schedule: (id, scheduled_at) => api.post(`/posts/${id}/schedule`, { scheduled_at }),
+  aiGenerate: (data) => api.post('/posts/ai-generate', data)
 }
 
 // 数据统计 API
