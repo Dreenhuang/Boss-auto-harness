@@ -75,6 +75,16 @@ const routes = [
         }
       },
       {
+        path: 'prompts',
+        name: 'PromptManage',
+        component: () => import('../views/PromptManage.vue'),
+        meta: {
+          title: '提示词管理',
+          icon: 'ChatDotRound',
+          permission: PERMISSIONS.SYSTEM_VIEW
+        }
+      },
+      {
         path: 'system',
         name: 'SystemConfig',
         component: () => import('../views/SystemConfig.vue'),

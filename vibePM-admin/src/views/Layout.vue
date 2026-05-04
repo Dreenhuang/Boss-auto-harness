@@ -89,6 +89,7 @@ const menuItems = computed(() => {
     { path: '/content', title: '内容管理', icon: 'Document', permission: 'content:view' },
     { path: '/data', title: '数据统计', icon: 'TrendCharts', permission: 'data:view' },
     { path: '/logs', title: '操作日志', icon: 'List', permission: 'log:view' },
+    { path: '/prompts', title: '提示词管理', icon: 'ChatDotRound', permission: 'system:view' },
     { path: '/system', title: '系统设置', icon: 'Setting', permission: 'system:view' }
   ]
 

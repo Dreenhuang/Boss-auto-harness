@@ -45,6 +45,16 @@ import {
   clearLogs
 } from '../controllers/admin/operationLog.js'
 
+import {
+  getPromptList,
+  getPromptDetail,
+  createPrompt,
+  updatePrompt,
+  deletePrompt,
+  getPromptCategories,
+  getPromptByKey
+} from '../controllers/admin/promptManage.js'
+
 const router = Router()
 
 // 用户管理
@@ -86,5 +96,14 @@ router.put('/system/config', updateSystemConfig)
 router.get('/logs', getLogList)
 router.get('/logs/:id', getLogDetail)
 router.delete('/logs', clearLogs)
+
+// 提示词管理
+router.get('/prompts', getPromptList)
+router.get('/prompts/categories', getPromptCategories)
+router.get('/prompts/:id', getPromptDetail)
+router.get('/prompts/key/:key', getPromptByKey)
+router.post('/prompts', createPrompt)
+router.put('/prompts/:id', updatePrompt)
+router.delete('/prompts/:id', deletePrompt)
 
 export default router

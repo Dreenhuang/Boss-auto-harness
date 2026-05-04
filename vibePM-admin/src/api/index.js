@@ -97,4 +97,15 @@ export const logApi = {
   clear: () => api.delete('/logs')
 }
 
+// 提示词管理 API
+export const promptApi = {
+  getList: (params) => api.get('/prompts', { params }),
+  getDetail: (id) => api.get(`/prompts/${id}`),
+  getByKey: (key) => api.get(`/prompts/key/${key}`),
+  getCategories: () => api.get('/prompts/categories'),
+  create: (data) => api.post('/prompts', data),
+  update: (id, data) => api.put(`/prompts/${id}`, data),
+  delete: (id) => api.delete(`/prompts/${id}`)
+}
+
 export default api
