@@ -12,10 +12,10 @@
     </div>
 
     <div class="category-bar">
-      <div 
-        class="category-item" 
-        :class="{ active: postStore.activeTab === tab.value }" 
-        v-for="tab in postStore.tabs" 
+      <div
+        class="category-item"
+        :class="{ active: postStore.activeTab === tab.value }"
+        v-for="tab in postStore.tabs"
         :key="tab.value"
         @click="postStore.switchTab(tab.value)"
       >
@@ -23,116 +23,125 @@
       </div>
     </div>
 
-    <div class="waterfall-container" ref="scrollContainer" @scroll="handleScroll">
-      <div class="waterfall-grid">
-        <div class="waterfall-column" ref="leftColumn">
-          <div 
-            class="app-card" 
-            v-for="post in leftPosts" 
-            :key="post.id"
-            @click="goToDetail(post)"
-          >
-            <div class="card-image" :style="{ height: post.height }">
-              <img :src="post.image" alt="" class="cover-img" loading="lazy" @error="handleImgError" />
-              <div class="category-badge">{{ post.category }}</div>
-            </div>
+    <WaterfallGrid
+      ref="waterfallRef"
+      :items="postStore.posts"
+      :loading="postStore.loading"
+      :has-more="postStore.hasMore"
+      :min-column-width="170"
+      :max-columns="2"
+      :column-gap="10"
+      :item-gap="10"
+      @load-more="handleLoadMore"
+      class="waterfall-section"
+    >
+      <template #default="{ item }">
+        <div
+          class="app-card"
+          @click="goToDetail(item)"
+        >
+          <div class="card-image" :style="{ height: item.height }">
+            <LazyImage
+              :src="item.image"
+              :alt="item.title"
+              :height="parseHeight(item.height)"
+              object-fit="cover"
+              @error="handleImgError"
+            />
+            <div class="category-badge">{{ item.category }}</div>
+          </div>
 
-            <div class="card-body">
-              <h3 class="card-title">{{ post.title }}</h3>
-              
-              <div class="card-footer">
-                <div class="author-info">
-                  <img :src="post.avatar" alt="" class="author-avatar" />
-                  <span class="author-name">{{ post.author }}</span>
-                </div>
-                
-                <div class="like-btn" @click.stop="handleLike(post.id)">
-                  <Icon 
-                    :icon="postStore.likedPosts.has(post.id) ? 'ri:heart-3-fill' : 'ri:heart-3-line'" 
-                    :class="{ liked: postStore.likedPosts.has(post.id) }"
-                  />
-                  <span class="like-count">{{ formatCount(post.likes) }}</span>
-                </div>
+          <div class="card-body">
+            <h3 class="card-title">{{ item.title }}</h3>
+
+            <div class="card-footer">
+              <div class="author-info">
+                <img :src="item.avatar" alt="" class="author-avatar" @error="handleAvatarError" />
+                <span class="author-name">{{ item.author }}</span>
+              </div>
+
+              <div class="like-btn" @click.stop="handleLike(item.id)">
+                <Icon
+                  :icon="postStore.likedPosts.has(item.id) ? 'ri:heart-3-fill' : 'ri:heart-3-line'"
+                  :class="{ liked: postStore.likedPosts.has(item.id) }"
+                />
+                <span class="like-count">{{ formatCount(item.likes) }}</span>
               </div>
             </div>
           </div>
         </div>
-        <div class="waterfall-column" ref="rightColumn">
-          <div 
-            class="app-card" 
-            v-for="post in rightPosts" 
-            :key="post.id"
-            @click="goToDetail(post)"
-          >
-            <div class="card-image" :style="{ height: post.height }">
-              <img :src="post.image" alt="" class="cover-img" loading="lazy" @error="handleImgError" />
-              <div class="category-badge">{{ post.category }}</div>
-            </div>
+      </template>
 
-            <div class="card-body">
-              <h3 class="card-title">{{ post.title }}</h3>
-              
-              <div class="card-footer">
-                <div class="author-info">
-                  <img :src="post.avatar" alt="" class="author-avatar" />
-                  <span class="author-name">{{ post.author }}</span>
-                </div>
-                
-                <div class="like-btn" @click.stop="handleLike(post.id)">
-                  <Icon 
-                    :icon="postStore.likedPosts.has(post.id) ? 'ri:heart-3-fill' : 'ri:heart-3-line'" 
-                    :class="{ liked: postStore.likedPosts.has(post.id) }"
-                  />
-                  <span class="like-count">{{ formatCount(post.likes) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="postStore.loading" class="load-more-tip">加载中...</div>
-      <div v-else-if="!postStore.hasMore && postStore.posts.length > 0" class="load-more-tip">没有更多内容了</div>
-      <div v-else-if="!postStore.loading && postStore.posts.length === 0" class="empty-state">
+      <template #empty>
         <Icon icon="ri:inbox-line" class="empty-icon" />
         <p class="empty-text">暂无内容</p>
-      </div>
-    </div>
+      </template>
+    </WaterfallGrid>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { usePostStore } from '../stores/postStore.js'
 import { useMessageStore } from '../stores/messageStore.js'
+import { postApi } from '../services/api.js'
+import WaterfallGrid from '../components/WaterfallGrid.vue'
+import LazyImage from '../components/LazyImage.vue'
 
 const router = useRouter()
 const postStore = usePostStore()
 const messageStore = useMessageStore()
-const scrollContainer = ref(null)
+const waterfallRef = ref(null)
+
+// 自动刷新定时器
+let autoRefreshTimer = null
+const AUTO_REFRESH_INTERVAL = 30000 // 30秒自动刷新一次
 
 // 检查是否有未读消息
 const hasUnread = computed(() => messageStore.unreadCount > 0)
 
-// 瀑布流双列分配 - 交替分配到左右列
-const leftPosts = computed(() => {
-  return postStore.posts.filter((_, index) => index % 2 === 0)
-})
-
-const rightPosts = computed(() => {
-  return postStore.posts.filter((_, index) => index % 2 === 1)
-})
-
 onMounted(() => {
+  // 初始加载
   postStore.loadPosts(true)
+
+  // 启动自动刷新
+  autoRefreshTimer = setInterval(() => {
+    if (!postStore.loading && postStore.posts.length > 0) {
+      // 静默刷新，不显示loading状态，只更新数据
+      refreshPostsSilently()
+    }
+  }, AUTO_REFRESH_INTERVAL)
 })
 
-const handleScroll = () => {
-  if (!scrollContainer.value) return
-  const { scrollTop, scrollHeight, clientHeight } = scrollContainer.value
-  if (scrollHeight - scrollTop - clientHeight < 200 && postStore.hasMore && !postStore.loading) {
+onUnmounted(() => {
+  // 清理定时器
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer)
+    autoRefreshTimer = null
+  }
+})
+
+// 静默刷新（后台更新数据，不重置列表）
+async function refreshPostsSilently() {
+  try {
+    const result = await postApi.getPosts(postStore.activeTab, 1, 10)
+    if (result.code === 200 && result.data?.list?.length > 0) {
+      // 比较新旧数据，只更新有变化的内容
+      const newPosts = result.data.list
+      if (newPosts.length > 0 && JSON.stringify(newPosts[0]) !== JSON.stringify(postStore.posts[0])) {
+        // 有新数据，插入到列表顶部
+        postStore.posts = [...newPosts, ...postStore.posts]
+      }
+    }
+  } catch {
+    // 静默失败，不影响用户体验
+  }
+}
+
+const handleLoadMore = () => {
+  if (postStore.hasMore && !postStore.loading) {
     postStore.loadPosts()
   }
 }
@@ -145,14 +154,27 @@ const handleLike = async (id) => {
   await postStore.toggleLike(id)
 }
 
-const handleImgError = (e) => {
-  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI0Y1RjVGNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjQ0NDQ0NDIiBmb250LXNpemU9IjE0Ij7lm77niYc8L3RleHQ+PC9zdmc+'
+const handleImgError = () => {
+  // LazyImage 组件内部已处理错误
+}
+
+const handleAvatarError = (e) => {
+  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMTAiIGZpbGw9IiNFNUU1RTUiLz48L3N2Zz4='
 }
 
 const formatCount = (num) => {
   if (!num) return '0'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'k'
   return num.toString()
+}
+
+// 解析高度值
+const parseHeight = (height) => {
+  if (!height) return 200
+  if (typeof height === 'string') {
+    return parseInt(height.replace('px', ''))
+  }
+  return height
 }
 </script>
 
@@ -283,31 +305,12 @@ const formatCount = (num) => {
   border-radius: 1px;
 }
 
-.waterfall-container {
+.waterfall-section {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
-.waterfall-container::-webkit-scrollbar {
-  display: none;
-}
-
-.waterfall-grid {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.waterfall-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+/* 卡片样式 */
 .app-card {
   background: #ffffff;
   border-radius: 12px;
@@ -315,8 +318,6 @@ const formatCount = (num) => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  animation: fadeInUp 0.3s ease forwards;
-  opacity: 0;
   break-inside: avoid;
 }
 
@@ -324,27 +325,14 @@ const formatCount = (num) => {
   transform: scale(0.98);
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.app-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .card-image {
   position: relative;
   background: #E5E5E5;
   overflow: hidden;
-}
-
-.cover-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .category-badge {
@@ -435,21 +423,7 @@ const formatCount = (num) => {
   font-weight: 600;
 }
 
-.load-more-tip {
-  text-align: center;
-  font-size: 12px;
-  color: #DDDDDD;
-  padding: 40px 0 20px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 0;
-}
-
+/* 空状态 */
 .empty-icon {
   font-size: 64px;
   color: #E5E5E5;

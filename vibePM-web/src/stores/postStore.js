@@ -43,16 +43,28 @@ export const usePostStore = defineStore('posts', () => {
         hasMore.value = result.data.list.length === 10
         currentPage.value++
       } else {
-        if (!useLocalData.value) {
+        // API返回空数据，尝试使用本地数据
+        if (!useLocalData.value && posts.value.length === 0) {
           useLocalData.value = true
+          const localPosts = getLocalPosts(activeTab.value)
+          posts.value = localPosts
+          // 本地数据支持分页模拟
+          hasMore.value = false
+        } else {
+          hasMore.value = false
         }
-        posts.value = getLocalPosts(activeTab.value)
+      }
+    } catch (error) {
+      console.error('[PostStore] Load posts error:', error)
+      // API调用失败，使用本地数据作为后备
+      if (!useLocalData.value && posts.value.length === 0) {
+        useLocalData.value = true
+        const localPosts = getLocalPosts(activeTab.value)
+        posts.value = localPosts
+        hasMore.value = false
+      } else {
         hasMore.value = false
       }
-    } catch {
-      useLocalData.value = true
-      posts.value = getLocalPosts(activeTab.value)
-      hasMore.value = false
     } finally {
       loading.value = false
     }
