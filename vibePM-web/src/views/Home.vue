@@ -230,8 +230,15 @@ async function handleRefresh() {
 }
 
 const handleLoadMore = () => {
-  if (postStore.hasMore && !postStore.loading) {
+  if (postStore.hasMore && !postStore.loading && postStore.posts.length > 0) {
+    console.log('[Home] handleLoadMore triggered, currentPage:', postStore.currentPage)
     postStore.loadPosts()
+  } else {
+    console.log('[Home] handleLoadMore blocked:', {
+      hasMore: postStore.hasMore,
+      loading: postStore.loading,
+      postsLength: postStore.posts.length
+    })
   }
 }
 

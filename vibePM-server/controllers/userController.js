@@ -4,13 +4,42 @@ export async function getUserProfile(req, res) {
   try {
     const userId = req.user?.id || 'guest'
 
+    // 如果是游客，返回默认资料
+    if (userId === 'guest' || req.user?.isGuest) {
+      return res.json({
+        code: 200,
+        message: 'success',
+        data: {
+          id: 'guest',
+          phone: '',
+          nickname: '游客',
+          avatar: '',
+          level: '新手',
+          joinDate: '',
+          preferences: { interests: [], experience: '零基础', goals: [], timeSlot: '', notificationEnabled: true },
+          stats: {
+            totalCardsLearned: 0,
+            totalFavorites: 0,
+            totalLearningHours: 0,
+            streakDays: 0,
+            completedPaths: 0
+          }
+        }
+      })
+    }
+
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
       .single()
 
-    if (userError) throw userError
+    if (userError) {
+      if (userError.code === 'PGRST116') {
+        return res.status(404).json({ code: 404, message: '用户不存在', data: null })
+      }
+      throw userError
+    }
 
     const { count: favCount } = await supabase
       .from('favorites')

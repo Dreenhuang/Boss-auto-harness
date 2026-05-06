@@ -27,22 +27,36 @@ export const usePostStore = defineStore('posts', () => {
   ]
 
   async function loadPosts(reset = false) {
-    if (loading.value) return
+    if (loading.value) {
+      console.log('[PostStore] Blocked: already loading')
+      return
+    }
 
     if (reset) {
+      const previousPage = currentPage.value
       currentPage.value = 1
       posts.value = []
       hasMore.value = true
       newPostsCount.value = 0
       syncStatus.value = 'syncing'
+      console.log('[PostStore] Fresh load started, reset from page', previousPage)
     }
 
     loading.value = true
     try {
       const result = await postApi.getPosts(activeTab.value, currentPage.value, 10)
+      
+      console.log('[PostStore] API Response:', {
+        code: result.code,
+        listLength: result.data?.list?.length || 0,
+        total: result.data?.total || 0,
+        page: currentPage.value,
+        reset: reset
+      })
       if (result.code === 200 && result.data?.list?.length > 0) {
         useLocalData.value = false
         const serverTotal = result.data.total || 0
+        console.log('[PostStore] Server total for current tab:', serverTotal)
 
         if (reset) {
           const newList = result.data.list
@@ -63,18 +77,36 @@ export const usePostStore = defineStore('posts', () => {
         } else {
           posts.value = [...posts.value, ...result.data.list]
         }
+        
+        // 确保 serverTotal > 0 才计算 hasMore
+        // 如果 serverTotal 为 0（未知总数），保守地设置为 true（可能有更多）
         const totalLoaded = reset ? result.data.list.length : posts.value.length
-        hasMore.value = totalLoaded < serverTotal
+        hasMore.value = serverTotal > 0 ? (totalLoaded < serverTotal) : (result.data.list.length === 10)
+        console.log('[PostStore] Pagination decision:', {
+          totalLoaded,
+          serverTotal,
+          hasMore: hasMore.value,
+          postsCount: posts.value.length,
+          nextPage: currentPage.value + 1
+        })
         currentPage.value++
         lastRefreshTime.value = Date.now()
         syncStatus.value = 'synced'
       } else {
+        console.log('[PostStore] Empty result or API error, checking fallback')
         if (!useLocalData.value && posts.value.length === 0) {
           useLocalData.value = true
           const localPosts = getLocalPosts(activeTab.value)
           posts.value = localPosts
-          hasMore.value = false
+          hasMore.value = localPosts.length > 0
           syncStatus.value = 'using_local'
+          console.log('[PostStore] Using local data:', localPosts.length, 'posts')
+        } else if (posts.value.length > 0) {
+          // 如果有现有数据，保守地保留 hasMore 为 true，以防这只是临时错误
+          // 用户可以继续尝试加载更多
+          hasMore.value = true
+          syncStatus.value = 'error_with_data'
+          console.log('[PostStore] Error but keeping existing data, hasMore:', hasMore.value)
         } else {
           hasMore.value = false
           syncStatus.value = 'no_more'
@@ -87,8 +119,14 @@ export const usePostStore = defineStore('posts', () => {
         useLocalData.value = true
         const localPosts = getLocalPosts(activeTab.value)
         posts.value = localPosts
-        hasMore.value = false
+        hasMore.value = localPosts.length > 0
         syncStatus.value = 'fallback_local'
+        console.log('[PostStore] Error, using local data:', localPosts.length, 'posts')
+      } else if (posts.value.length > 0) {
+        // 有现有数据时不设为 false，保留加载更多的能力
+        hasMore.value = true
+        syncStatus.value = 'error_with_existing_data'
+        console.log('[PostStore] Error but keeping existing data, hasMore:', hasMore.value)
       } else {
         hasMore.value = false
         syncStatus.value = 'error'
