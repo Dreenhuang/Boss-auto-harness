@@ -108,6 +108,7 @@ import { usePostStore } from '../stores/postStore.js'
 import { useMessageStore } from '../stores/messageStore.js'
 import { postApi } from '../services/api.js'
 import { useWebSocket } from '../services/websocket.js'
+import { perfMonitor } from '../services/performanceMonitor.js'
 import WaterfallGrid from '../components/WaterfallGrid.vue'
 import PullRefresh from '../components/PullRefresh.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -135,6 +136,10 @@ const AUTO_REFRESH_INTERVAL = 30000 // 30秒自动刷新一次（仅当WebSocket
 const hasUnread = computed(() => messageStore.unreadCount > 0)
 
 onMounted(() => {
+  // 启动性能监控
+  perfMonitor.startPeriodicMonitor(60000)
+  console.log('[Home] Performance monitor started')
+
   // 初始加载
   postStore.loadPosts(true)
 
@@ -163,6 +168,10 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  // 停止性能监控
+  perfMonitor.stopPeriodicMonitor()
+  console.log('[Home] Performance monitor stopped')
+
   // 清理定时器
   if (autoRefreshTimer) {
     clearInterval(autoRefreshTimer)

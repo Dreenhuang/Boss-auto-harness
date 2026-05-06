@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { postApi, favoriteApi } from '../services/api.js'
 import { getLocalPosts, getLocalPostById } from '../services/localData.js'
+import { perfMonitor } from '../services/performanceMonitor.js'
 
 export const usePostStore = defineStore('posts', () => {
   const posts = ref([])
@@ -15,6 +16,7 @@ export const usePostStore = defineStore('posts', () => {
   const lastKnownPostId = ref(null)
   const lastRefreshTime = ref(null)
   const newPostsCount = ref(0)
+  const syncStatus = ref('idle')
 
   const tabs = [
     { label: '推荐', value: 'recommend' },
@@ -32,6 +34,7 @@ export const usePostStore = defineStore('posts', () => {
       posts.value = []
       hasMore.value = true
       newPostsCount.value = 0
+      syncStatus.value = 'syncing'
     }
 
     loading.value = true
@@ -39,45 +42,56 @@ export const usePostStore = defineStore('posts', () => {
       const result = await postApi.getPosts(activeTab.value, currentPage.value, 10)
       if (result.code === 200 && result.data?.list?.length > 0) {
         useLocalData.value = false
-        
+        const serverTotal = result.data.total || 0
+
         if (reset) {
           const newList = result.data.list
           if (newList.length > 0) {
             const previousTopId = posts.value[0]?.id
             const newTopId = newList[0]?.id
-            if (previousTopId && newTopId && previousTopId !== newTopId) {
+            const hasNewData = previousTopId && newTopId && previousTopId !== newTopId
+
+            if (hasNewData) {
               const newCount = newList.findIndex(p => p.id === previousTopId)
               newPostsCount.value = newCount >= 0 ? newCount : newList.length
             }
             lastKnownPostId.value = newList[0]?.id
+            perfMonitor.updateDataFresness(newList[0]?.id, serverTotal)
           }
           posts.value = newList
+          perfMonitor.recordSync(serverTotal, newList.length > 0)
         } else {
           posts.value = [...posts.value, ...result.data.list]
         }
         const totalLoaded = reset ? result.data.list.length : posts.value.length
-        hasMore.value = totalLoaded < result.data.total
+        hasMore.value = totalLoaded < serverTotal
         currentPage.value++
         lastRefreshTime.value = Date.now()
+        syncStatus.value = 'synced'
       } else {
         if (!useLocalData.value && posts.value.length === 0) {
           useLocalData.value = true
           const localPosts = getLocalPosts(activeTab.value)
           posts.value = localPosts
           hasMore.value = false
+          syncStatus.value = 'using_local'
         } else {
           hasMore.value = false
+          syncStatus.value = 'no_more'
         }
       }
     } catch (error) {
       console.error('[PostStore] Load posts error:', error)
+      perfMonitor.recordSyncError()
       if (!useLocalData.value && posts.value.length === 0) {
         useLocalData.value = true
         const localPosts = getLocalPosts(activeTab.value)
         posts.value = localPosts
         hasMore.value = false
+        syncStatus.value = 'fallback_local'
       } else {
         hasMore.value = false
+        syncStatus.value = 'error'
       }
     } finally {
       loading.value = false
@@ -121,6 +135,17 @@ export const usePostStore = defineStore('posts', () => {
     loadPosts(true)
   }
 
+  function getSyncStatus() {
+    return {
+      status: syncStatus.value,
+      postsCount: posts.value.length,
+      lastRefreshTime: lastRefreshTime.value,
+      lastKnownPostId: lastKnownPostId.value,
+      isUsingLocalData: useLocalData.value,
+      ...perfMonitor.getSyncStats()
+    }
+  }
+
   return {
     posts,
     currentPost,
@@ -136,6 +161,8 @@ export const usePostStore = defineStore('posts', () => {
     switchTab,
     lastKnownPostId,
     lastRefreshTime,
-    newPostsCount
+    newPostsCount,
+    syncStatus,
+    getSyncStatus
   }
 })
