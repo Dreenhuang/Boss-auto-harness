@@ -22,14 +22,14 @@ export async function getPosts(req, res) {
     const posts = data.map(post => ({
       id: post.id,
       title: post.title,
-      author: post.author,
-      avatar: post.avatar,
-      likes: post.likes,
-      image: post.image,
+      author: post.author || 'AI助手',
+      avatar: post.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=vibepm',
+      likes: post.likes || 0,
+      image: post.image || `https://picsum.photos/seed/${post.id}/400/300`,
       height: post.height || '220px',
-      category: post.category,
-      type: post.type,
-      content: post.content,
+      category: post.category || '未分类',
+      type: post.type || 'concept',
+      content: post.content || '',
       tags: post.tags || [],
       createdAt: post.created_at,
       updatedAt: post.updated_at
@@ -42,7 +42,8 @@ export async function getPosts(req, res) {
         list: posts,
         total: count || 0,
         page: Number(page),
-        pageSize: Number(pageSize)
+        pageSize: Number(pageSize),
+        hasMore: (offset + (data?.length || 0)) < (count || 0)
       }
     })
   } catch (error) {

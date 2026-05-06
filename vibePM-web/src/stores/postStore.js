@@ -12,6 +12,9 @@ export const usePostStore = defineStore('posts', () => {
   const activeTab = ref('recommend')
   const likedPosts = ref(new Set())
   const useLocalData = ref(false)
+  const lastKnownPostId = ref(null)
+  const lastRefreshTime = ref(null)
+  const newPostsCount = ref(0)
 
   const tabs = [
     { label: '推荐', value: 'recommend' },
@@ -28,6 +31,7 @@ export const usePostStore = defineStore('posts', () => {
       currentPage.value = 1
       posts.value = []
       hasMore.value = true
+      newPostsCount.value = 0
     }
 
     loading.value = true
@@ -35,20 +39,31 @@ export const usePostStore = defineStore('posts', () => {
       const result = await postApi.getPosts(activeTab.value, currentPage.value, 10)
       if (result.code === 200 && result.data?.list?.length > 0) {
         useLocalData.value = false
+        
         if (reset) {
-          posts.value = result.data.list
+          const newList = result.data.list
+          if (newList.length > 0) {
+            const previousTopId = posts.value[0]?.id
+            const newTopId = newList[0]?.id
+            if (previousTopId && newTopId && previousTopId !== newTopId) {
+              const newCount = newList.findIndex(p => p.id === previousTopId)
+              newPostsCount.value = newCount >= 0 ? newCount : newList.length
+            }
+            lastKnownPostId.value = newList[0]?.id
+          }
+          posts.value = newList
         } else {
           posts.value = [...posts.value, ...result.data.list]
         }
-        hasMore.value = result.data.list.length === 10
+        const totalLoaded = reset ? result.data.list.length : posts.value.length
+        hasMore.value = totalLoaded < result.data.total
         currentPage.value++
+        lastRefreshTime.value = Date.now()
       } else {
-        // API返回空数据，尝试使用本地数据
         if (!useLocalData.value && posts.value.length === 0) {
           useLocalData.value = true
           const localPosts = getLocalPosts(activeTab.value)
           posts.value = localPosts
-          // 本地数据支持分页模拟
           hasMore.value = false
         } else {
           hasMore.value = false
@@ -56,7 +71,6 @@ export const usePostStore = defineStore('posts', () => {
       }
     } catch (error) {
       console.error('[PostStore] Load posts error:', error)
-      // API调用失败，使用本地数据作为后备
       if (!useLocalData.value && posts.value.length === 0) {
         useLocalData.value = true
         const localPosts = getLocalPosts(activeTab.value)
@@ -119,6 +133,9 @@ export const usePostStore = defineStore('posts', () => {
     loadPosts,
     loadPostDetail,
     toggleLike,
-    switchTab
+    switchTab,
+    lastKnownPostId,
+    lastRefreshTime,
+    newPostsCount
   }
 })

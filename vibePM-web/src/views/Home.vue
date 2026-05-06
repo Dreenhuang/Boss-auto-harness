@@ -23,60 +23,80 @@
       </div>
     </div>
 
-    <WaterfallGrid
-      ref="waterfallRef"
-      :items="postStore.posts"
-      :loading="postStore.loading"
-      :has-more="postStore.hasMore"
-      :min-column-width="170"
-      :max-columns="2"
-      :column-gap="10"
-      :item-gap="10"
-      @load-more="handleLoadMore"
-      class="waterfall-section"
+    <PullRefresh
+      ref="pullRefreshRef"
+      @refresh="handleRefresh"
     >
-      <template #default="{ item }">
-        <div
-          class="app-card"
-          @click="goToDetail(item)"
-        >
-          <div class="card-image" :style="{ height: item.height }">
-            <LazyImage
-              :src="item.image"
-              :alt="item.title"
-              :height="parseHeight(item.height)"
-              object-fit="cover"
-              @error="handleImgError"
-            />
-            <div class="category-badge">{{ item.category }}</div>
-          </div>
+      <WaterfallGrid
+        ref="waterfallRef"
+        :items="postStore.posts"
+        :loading="postStore.loading"
+        :has-more="postStore.hasMore"
+        :min-column-width="170"
+        :max-columns="2"
+        :column-gap="10"
+        :item-gap="10"
+        @load-more="handleLoadMore"
+        class="waterfall-section"
+      >
+        <template #default="{ item }">
+          <div
+            class="app-card"
+            @click="goToDetail(item)"
+          >
+            <div class="card-image" :style="{ height: item.height }">
+              <LazyImage
+                :src="item.image"
+                :alt="item.title"
+                :height="parseHeight(item.height)"
+                object-fit="cover"
+                @error="handleImgError"
+              />
+              <div class="category-badge">{{ item.category }}</div>
+            </div>
 
-          <div class="card-body">
-            <h3 class="card-title">{{ item.title }}</h3>
+            <div class="card-body">
+              <h3 class="card-title">{{ item.title }}</h3>
 
-            <div class="card-footer">
-              <div class="author-info">
-                <img :src="item.avatar" alt="" class="author-avatar" @error="handleAvatarError" />
-                <span class="author-name">{{ item.author }}</span>
-              </div>
+              <div class="card-footer">
+                <div class="author-info">
+                  <img :src="item.avatar" alt="" class="author-avatar" @error="handleAvatarError" />
+                  <span class="author-name">{{ item.author }}</span>
+                </div>
 
-              <div class="like-btn" @click.stop="handleLike(item.id)">
-                <Icon
-                  :icon="postStore.likedPosts.has(item.id) ? 'ri:heart-3-fill' : 'ri:heart-3-line'"
-                  :class="{ liked: postStore.likedPosts.has(item.id) }"
-                />
-                <span class="like-count">{{ formatCount(item.likes) }}</span>
+                <div class="like-btn" @click.stop="handleLike(item.id)">
+                  <Icon
+                    :icon="postStore.likedPosts.has(item.id) ? 'ri:heart-3-fill' : 'ri:heart-3-line'"
+                    :class="{ liked: postStore.likedPosts.has(item.id) }"
+                  />
+                  <span class="like-count">{{ formatCount(item.likes) }}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </template>
+        </template>
 
-      <template #empty>
-        <Icon icon="ri:inbox-line" class="empty-icon" />
-        <p class="empty-text">暂无内容</p>
-      </template>
-    </WaterfallGrid>
+        <template #empty>
+          <EmptyState
+            type="search"
+            title="暂无学习内容"
+            description="下拉刷新试试，或切换其他分类查看"
+            :show-retry="true"
+            retry-text="重新加载"
+            @retry="handleRefresh"
+          />
+        </template>
+
+        <template #no-more>
+          <EmptyState
+            type="default"
+            title="已经到底啦"
+            description="所有内容都已加载完毕"
+            tip="新内容会自动更新到顶部"
+          />
+        </template>
+      </WaterfallGrid>
+    </PullRefresh>
   </div>
 </template>
 
@@ -87,17 +107,29 @@ import { Icon } from '@iconify/vue'
 import { usePostStore } from '../stores/postStore.js'
 import { useMessageStore } from '../stores/messageStore.js'
 import { postApi } from '../services/api.js'
+import { useWebSocket } from '../services/websocket.js'
 import WaterfallGrid from '../components/WaterfallGrid.vue'
+import PullRefresh from '../components/PullRefresh.vue'
+import EmptyState from '../components/EmptyState.vue'
 import LazyImage from '../components/LazyImage.vue'
 
 const router = useRouter()
 const postStore = usePostStore()
 const messageStore = useMessageStore()
 const waterfallRef = ref(null)
+const pullRefreshRef = ref(null)
 
-// 自动刷新定时器
+// WebSocket连接
+const {
+  connect: wsConnect,
+  disconnect: wsDisconnect,
+  onNewPost,
+  isConnected: isWsConnected
+} = useWebSocket()
+
+// 自动刷新定时器（作为后备方案）
 let autoRefreshTimer = null
-const AUTO_REFRESH_INTERVAL = 30000 // 30秒自动刷新一次
+const AUTO_REFRESH_INTERVAL = 30000 // 30秒自动刷新一次（仅当WebSocket不可用时）
 
 // 检查是否有未读消息
 const hasUnread = computed(() => messageStore.unreadCount > 0)
@@ -106,13 +138,28 @@ onMounted(() => {
   // 初始加载
   postStore.loadPosts(true)
 
-  // 启动自动刷新
-  autoRefreshTimer = setInterval(() => {
-    if (!postStore.loading && postStore.posts.length > 0) {
-      // 静默刷新，不显示loading状态，只更新数据
-      refreshPostsSilently()
-    }
-  }, AUTO_REFRESH_INTERVAL)
+  // 尝试建立WebSocket连接
+  try {
+    // 使用环境变量中的WS URL，或根据当前环境自动选择
+    const wsUrl = import.meta.env.VITE_WS_URL ||
+                  (window.location.hostname === 'localhost'
+                    ? 'ws://localhost:3001/ws'
+                    : `ws://${window.location.hostname}:3001/ws`)
+    console.log('[Home] Connecting to WebSocket:', wsUrl)
+    wsConnect(wsUrl)
+
+    // 监听新文章推送
+    onNewPost((data) => {
+      console.log('[Home] Received new post via WebSocket:', data)
+      if (data.data) {
+        // 将新文章插入到列表顶部
+        postStore.posts = [data.data, ...postStore.posts]
+      }
+    })
+  } catch (error) {
+    console.warn('[Home] WebSocket connection failed, falling back to polling:', error)
+    startPollingFallback()
+  }
 })
 
 onUnmounted(() => {
@@ -121,22 +168,55 @@ onUnmounted(() => {
     clearInterval(autoRefreshTimer)
     autoRefreshTimer = null
   }
+
+  // 断开WebSocket连接
+  try {
+    wsDisconnect()
+  } catch (error) {
+    console.warn('[Home] Error disconnecting WebSocket:', error)
+  }
 })
+
+// 后备轮询方案（当WebSocket不可用时）
+function startPollingFallback() {
+  autoRefreshTimer = setInterval(() => {
+    if (!postStore.loading && postStore.posts.length > 0) {
+      refreshPostsSilently()
+    }
+  }, AUTO_REFRESH_INTERVAL)
+}
 
 // 静默刷新（后台更新数据，不重置列表）
 async function refreshPostsSilently() {
   try {
     const result = await postApi.getPosts(postStore.activeTab, 1, 10)
     if (result.code === 200 && result.data?.list?.length > 0) {
-      // 比较新旧数据，只更新有变化的内容
       const newPosts = result.data.list
-      if (newPosts.length > 0 && JSON.stringify(newPosts[0]) !== JSON.stringify(postStore.posts[0])) {
-        // 有新数据，插入到列表顶部
-        postStore.posts = [...newPosts, ...postStore.posts]
+      const currentTopId = postStore.posts[0]?.id
+      const newTopId = newPosts[0]?.id
+      if (newTopId && newTopId !== currentTopId) {
+        const existingIds = new Set(postStore.posts.map(p => p.id))
+        const uniqueNewPosts = newPosts.filter(p => !existingIds.has(p.id))
+        if (uniqueNewPosts.length > 0) {
+          postStore.posts = [...uniqueNewPosts, ...postStore.posts]
+          postStore.newPostsCount = uniqueNewPosts.length
+          console.log(`[Home] Found ${uniqueNewPosts.length} new posts`)
+        }
       }
     }
-  } catch {
-    // 静默失败，不影响用户体验
+  } catch (error) {
+    console.warn('[Home] Silent refresh failed:', error.message)
+  }
+}
+
+// 下拉刷新处理函数
+async function handleRefresh() {
+  try {
+    await postStore.loadPosts(true)
+    return Promise.resolve()
+  } catch (error) {
+    console.error('[Home] 刷新失败:', error)
+    return Promise.reject(error)
   }
 }
 
