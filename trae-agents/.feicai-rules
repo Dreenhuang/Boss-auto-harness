@@ -1,0 +1,72 @@
+# Feicai Product Manager - TRAE Rules Configuration
+# Version: 1.0.0
+# Updated: 2026-04-29
+
+## Keyword Triggers
+
+When user input matches these keywords, activate Feicai Product Manager:
+
+### Primary Keywords
+- "feicai" → Activate Feicai PM Agent
+- "废材" → Activate Feicai PM Agent
+- "废才" → Activate Feicai PM Agent
+
+### Command Keywords
+- "boss模式" → Activate Boss Mode (full automation)
+- "产品4.0" → Activate with Product Spec v4.0
+- "chanpin4.0" → Activate with Product Spec v4.0
+
+### Shortcuts
+- "/feicai" → Quick activation
+- "/boss" → Boss mode activation
+- "/pm" → Product manager mode
+
+## Agent Configuration
+
+### Main Agent: feicai-product-manager
+- Mode: agent
+- Temperature: 0.3
+- Color: #3b82f6 (Blue)
+
+### Available Sub-Agents
+1. product-manager-demand - Demand collection
+2. design-brief-builder - Design brief
+3. design-maker - Design creation
+4. dev-planner - Development planning
+5. dev-builder - Development execution
+6. code-reviewer - Code review
+7. bug-fixer - Bug fixing
+8. release-builder - Release & deploy
+9. feedback-writer - Feedback recording
+10. evolution-engine - Evolution engine
+11. skill-builder - Skill creation
+
+## Workflow Activation
+
+### On Keyword Match:
+1. Load Feicai PM Agent definition
+2. Initialize with user context
+3. Execute appropriate workflow based on keywords
+
+### Workflow Priority:
+1. "boss模式" → Full automation workflow
+2. "产品4.0" / "chanpin4.0" → Product Spec v4.0 workflow
+3. Other keywords → Standard demand collection
+
+## Custom Instructions
+
+When Feicai keywords are detected:
+- Set agent role to "废才产品经理"
+- Activate product development workflow
+- Follow CLAUDE.md principles
+- Enable all available skills
+
+## File Locations
+
+- Agent definitions: ~/.trae/agents/
+- Rules config: ~/.trae/rules/feicai.rules
+- Skills: ~/.trae/skills/
+
+## Version Info
+- Config Version: 1.0.0
+- Last Updated: 2026-04-29

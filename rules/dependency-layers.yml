@@ -1,0 +1,315 @@
+---
+description: "依赖分层规则 - 强制架构约束，防止循环依赖和违规导入"
+mode: architecture
+version: 1.0.0
+keywords:
+  - dependency-layers
+  - architecture-constraints
+  - harness-engineering
+---
+
+# 依赖分层规则 (Dependency Layers)
+
+> **来源**: Harness Engineering 核心支柱二 — 架构约束  
+> **对标**: OpenAI Codex 团队的 Types → Config → Repo → Service → Runtime → UI 分层模型  
+> **目的**: 用机械手段强制代码架构规范，而非仅靠Prompt"建议"
+
+---
+
+## 一、六层架构模型
+
+```
+┌─────────────────────────────────────────────────┐
+│              Layer 6: UI (界面层)                │
+│  组件: Pages, Components, Hooks, Views         │
+│  可导入: Layer 1,2,3,4,5                    │
+│  禁止: 直接访问数据库、API、底层服务          │
+├─────────────────────────────────────────────────┤
+│           Layer 5: Runtime (运行时层)            │
+│  组件: Middleware, Handlers, Controllers        │
+│  可导入: Layer 1,2,3,4                       │
+│  禁止: 直接操作数据库、系统资源               │
+├─────────────────────────────────────────────────┤
+│            Layer 4: Service (服务层)             │
+│  组件: Business Logic, Use Cases, Services      │
+│  可导入: Layer 1,2,3                          │
+│  禁止: 直接操作数据存储、基础设施             │
+├─────────────────────────────────────────────────┤
+│             Layer 3: Data (数据层)               │
+│  组件: Repositories, Data Access Objects       │
+│  可导入: Layer 1,2                            │
+│  禁止: 直接操作数据库连接、外部API            │
+├─────────────────────────────────────────────────┤
+│            Layer 2: Config (配置层)              │
+│  组件: Constants, Environment, Settings        │
+│  可导入: Layer 1                              │
+│  禁止: 导入业务逻辑、UI组件                   │
+├─────────────────────────────────────────────────┤
+│             Layer 1: Types (类型层)              │
+│  组件: Interfaces, Types, Enums, DTOs          │
+│  可导入: 无（基础类型）                        │
+│  禁止: 导入任何实现层                         │
+└─────────────────────────────────────────────────┘
+```
+
+---
+
+## 二、分层规则详解
+
+### 2.1 Layer 1: Types (类型层)
+
+**定义**: 所有类型定义、接口、枚举、DTO
+
+| 属性 | 规则 |
+|------|------|
+| **可包含** | interface, type, enum, const, type alias |
+| **可导入** | 无（或仅其他Type文件） |
+| **禁止导入** | 任何实现类、函数、组件 |
+| **示例位置** | `src/types/`, `src/interfaces/`, `src/models/` |
+| **文件命名** | `*.ts` (type only), `*.d.ts` |
+
+```typescript
+// ✅ 正确：Types层只定义类型
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+// ❌ 错误：Types层不应有实现
+export class UserService {
+  // 这属于Service层，不应在这里
+}
+```
+
+### 2.2 Layer 2: Config (配置层)
+
+**定义**: 常量、环境变量封装、应用配置
+
+| 属性 | 规则 |
+|------|------|
+| **可包含** | const, env wrapper, config objects |
+| **可导入** | Layer 1 (Types) |
+| **禁止导入** | Layer 3+ (Data/Service/Runtime/UI) |
+| **示例位置** | `src/config/`, `src/constants/`, `src/env/` |
+
+```typescript
+// ✅ 正确：Config层引用Types
+import { User } from '../types/user';
+
+export const APP_CONFIG = {
+  apiUrl: process.env.API_URL,
+  maxRetries: 3,
+};
+
+// ❌ 错误：Config层不应引用Service
+import { UserService } from '../services/user';
+```
+
+### 2.3 Layer 3: Data (数据层)
+
+**定义**: 数据仓库模式、DAO、数据访问对象
+
+| 属性 | 规则 |
+|------|------|
+| **可包含** | Repository classes, DAO, data access logic |
+| **可导入** | Layer 1, 2 (Types, Config) |
+| **禁止导入** | Layer 4+ (Service/Runtime/UI) |
+| **示例位置** | `src/repositories/`, `src/data/`, `src/lib/data/` |
+
+### 2.4 Layer 4: Service (服务层)
+
+**定义**: 业务逻辑、用例、领域服务
+
+| 属性 | 规则 |
+|------|------|
+| **可包含** | Service classes, business logic, use cases |
+| **可导入** | Layer 1, 2, 3 (Types, Config, Data) |
+| **禁止导入** | Layer 5, 6 (Runtime/UI) |
+| **示例位置** | `src/services/`, `src/domain/`, `src/use-cases/` |
+
+### 2.5 Layer 5: Runtime (运行时层)
+
+**定义**: 中间件、处理器、控制器
+
+| 属性 | 规则 |
+|------|------|
+| **可包含** | Middleware, API handlers, controllers |
+| **可导入** | Layer 1, 2, 3, 4 (Types到Service) |
+| **禁止导入** | Layer 6 (UI) 的具体实现 |
+| **示例位置** | `src/middleware/`, `src/api/`, `src/app/api/` |
+
+### 2.6 Layer 6: UI (界面层)
+
+**定义**: 页面、组件、Hooks、视图
+
+| 属性 | 规则 |
+|------|------|
+| **可包含** | React Components, Pages, Custom Hooks |
+| **可导入** | Layer 1-5 (所有下层) |
+| **禁止导入** | 无（最上层，可导入一切） |
+| **示例位置** | `src/components/`, `src/app/`, `src/pages/` |
+
+---
+
+## 三、违规检测规则
+
+### 3.1 自动检测场景
+
+| 违规类型 | 检测方式 | 阻断级别 |
+|---------|---------|---------|
+| **向上依赖** | UI层导入了Runtime层的实现 | 🔴 阻断 |
+| **跨层跳跃** | Types层导入了Service层 | 🔴 阻断 |
+| **循环依赖** | A→B→A 形成环 | 🔴 阻断 |
+| **同层耦合** | 同层模块间过度依赖 | ⚠️ 警告 |
+| **反向依赖** | 下层导入了上层 | 🔴 阻断 |
+
+### 3.2 常见违规模式
+
+```
+❌ 违规1: UI直接访问数据层
+   src/components/UserList.tsx
+     → import { UserRepository } from '../../data/user'
+   
+✅ 正确: 通过Service层间接访问
+   src/components/UserList.tsx
+     → import { userService } from '../../services/user'
+
+❌ 违规2: Config导入业务逻辑
+   src/config/index.ts
+     → import { calculatePrice } from '../services/pricing'
+   
+✅ 正确: Config只引用Types
+   src/config/index.ts
+     → import { PricingConfig } from '../types/pricing'
+
+❌ 违规3: 循环依赖
+   serviceA.ts → import { serviceB }
+   serviceB.ts → import { serviceA}
+   
+✅ 正确: 单向依赖或通过接口解耦
+```
+
+---
+
+## 四、集成方式
+
+### 4.1 在 quality-gate 中启用
+
+```yaml
+# quality-gate SKILL.md 中增加检查项
+dependency_layer_check:
+  enabled: true
+  tool: custom-eslint-plugin / manual-check
+  
+  checks:
+    - name: "向上依赖检测"
+      rule: "文件所在层级不能导入更高层级的实现"
+      
+    - name: "循环依赖检测"
+      rule: "不允许A→B→A的导入链"
+      
+    - name: "跨层跳跃检测"
+      rule: "只能导入相邻层或更低层"
+  
+  action_on_violation:
+    - minor: 记录警告，继续执行
+    - major: 阻断，要求修复
+    - critical: 阻断，强制重构
+```
+
+### 4.2 在 code-review 中增加维度
+
+```yaml
+# code-review SKILL.md 第五维扩展
+Stage 2 新增子项:
+  - 架构合规性:
+      - 依赖方向是否正确
+      - 是否存在循环依赖
+      - 是否违反分层规则
+      - 文件是否放在正确的目录中
+```
+
+### 4.3 在 dev-builder 反合理化清单中增加
+
+```
+反合理化清单新增:
+- [ ] 文件放置在正确的Layer目录中
+- [ ] 导入语句符合分层规则
+- [ ] 不存在向上的依赖关系
+- [ ] 不存在循环依赖
+```
+
+---
+
+## 五、目录结构映射
+
+```
+src/
+├── types/              ← Layer 1: 类型定义
+│   ├── user.ts
+│   ├── product.ts
+│   └── index.ts
+│
+├── config/             ← Layer 2: 配置常量
+│   ├── constants.ts
+│   ├── env.ts
+│   └── app.config.ts
+│
+├── data/               ← Layer 3: 数据访问
+│   ├── repositories/
+│   │   ├── user.repo.ts
+│   │   └── product.repo.ts
+│   └── models/
+│
+├── services/           ← Layer 4: 业务服务
+│   ├── user.service.ts
+│   ├── auth.service.ts
+│   └── product.service.ts
+│
+├── api/                ← Layer 5: 运行时/API
+│   ├── handlers/
+│   ├── middleware/
+│   └── routes/
+│
+└── components/         ← Layer 6: 界面
+    ├── ui/
+    ├── pages/
+    └── hooks/
+```
+
+---
+
+## 六、特殊场景处理
+
+### 6.1 共享工具函数
+
+```typescript
+// 工具函数放在 config 层或独立的 utils/ 目录
+// 规则：必须是纯函数，无副作用，不依赖业务状态
+
+// ✅ 允许: utils/date.ts (纯工具)
+export function formatDate(date: Date): string { ... }
+
+// ✅ 允许: utils/string.ts (纯工具)
+export function slugify(text: string): string { ... }
+
+// ❌ 不允许: utils/api.ts (调用外部API)
+```
+
+### 6.2 类型共享
+
+```typescript
+// Types层可以跨项目共享
+// 放在 packages/types 或 src/shared/types/
+
+// ✅ 允许: 多个Layer都可以导入types
+```
+
+### 6.3 测试文件
+
+```typescript
+// 测试文件的分层遵循被测文件的层级
+// tests/services/user.service.test.ts  → 可以导入service层及以下
+// tests/components/UserList.test.tsx → 可以导入任何层（测试例外）
+```
